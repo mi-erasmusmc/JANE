@@ -1,0 +1,411 @@
+#bluebar {
+	position:relative;
+	width:100px;
+	height:20px;
+	padding:0px;
+	margin-right: 5px;
+	background-color:#DFF1FF;
+}
+
+#orangebar {
+	position:relative;
+	display: block;
+	width:100px;
+	height:20px;
+	background-color:#ebf5fd;
+}
+
+#bluebarfill {
+	position:absolute;
+	top:0px;
+	left:0px;
+	width:0px;
+	height:20px;
+    background-color:#0063B0;
+}
+
+#orangebarfill {
+	position:absolute;
+	 display: block
+	top:0px;
+	left:0px;
+	width:0px;
+	height:20px;
+
+    background-color:#79baee;
+}
+
+#barcontent {
+    position: absolute;
+
+    left: 0;
+    width: 100px;
+	text-align:center;
+    line-height: 20px;
+
+}
+#barcontent a {
+    text-decoration: none;
+    color: #000000;
+}
+
+#barcontent a:hover {
+    text-decoration: underline;
+    
+}
+.lowButton {
+  border: 0;
+  background-color: #D1E8F9;
+  color: #000000;
+  height: 17px;
+  margin-top: 5px;
+}
+
+.lowButton:hover {
+  background-color: #FFAB08;
+}
+
+
+.bigButton {
+  border: 0;
+  background-color: #D1E8F9;
+  color: #000000;
+  height: 20px;
+  width:100px;
+  margin: 0;
+}
+
+.bigButton:hover {
+  background-color: #FFAB08;
+}
+
+
+.highButton {
+  border: 0;
+  background-color: #ACD6F5;
+  color: #000000;
+  padding: 5px;
+}
+
+.highButton:hover {
+  background-color: #FFAB08;
+}
+
+.expandable {
+  border: 2px solid #0063B0;
+  padding: 10px;
+  margin-top: 2px;
+  margin-bottom: 10px;
+  vertical-align:top;  
+}
+
+body {
+  text-align: center;
+}
+
+body, input, table {
+  font-family: Verdana, Geneva, Arial, Helvetica, sans-serif;
+  font-size: 8pt;
+}
+
+table {
+  border-width: 0;
+  padding: 0;
+  border-collapse: collapse; 
+}
+
+th {
+  text-align: center;
+  vertical-align: bottom;
+}
+
+
+.line {
+  background-color: #ebf5fd; 
+}
+
+h2 {
+	color: #FFAB08; 
+	font-size: 2em; 
+	text-align: left; 
+/* some air around the text */
+	padding-bottom: 1px;
+/* set borders around header */
+	border-bottom: 1px solid #FFAB08; 
+      line-height: 1.5em;
+/* and some air under the border */
+      margin: 0 0 0.5em 0;
+}
+
+a,
+a:link 
+a:active {
+  text-decoration: underline;
+/* css validation will give a warning if color is set without background color. this will explicitly tell this element to inherit bg colour from parent element */
+  background-color: inherit; 
+  color: #0063B0;//#1699FF; 
+}
+
+a:visited {
+  text-decoration: underline;
+  background-color: inherit;
+}
+
+
+/* remove underline on hover and change color */
+a:hover {
+  text-decoration: underline;
+  background-color: inherit;
+  color: #FFAB08;
+}
+
+
+
+/* center wrapper, min max width */
+#pagewrapper {
+  width: 960px;
+  display: block;
+  margin: 0 auto;     /* this centers wrapper */
+  background-color: #fff;
+  color: black;
+  text-align: left;
+}
+
+#emailwrapper {
+  display: block;
+  text-align: left;
+}
+
+
+
+
+/*** header ***
+we will hide text and replace it with a image
+we need to assign a height for it so that the image wont cut off
+*/
+#header {
+  height: 116px;   /* adjust according your image size */      
+}
+
+#header h1 {
+  background: #ffffff url(images/Jane.gif) no-repeat 0 0; 
+  display: block;
+  height: 116px;      
+  text-indent: -999em;  /* this hides the text */
+  text-decoration:none; /* old firefox would have shown underline for the link, this explicitly hides it */
+}
+
+#smallheader {
+  height: 65px;   /* adjust according your image size */      
+}
+
+#smallheader h1 {
+  background: #ffffff url(images/JaneTiny.gif) no-repeat 0 0; 
+  display: block;
+  height: 65px;      
+  text-indent: -999em;  /* this hides the text */
+  text-decoration:none; /* old firefox would have shown underline for the link, this explicitly hides it */
+}
+
+/*** columns for first screen ***/
+#leftcolumn {
+  display: block;
+  width: 660px;
+  float: left;
+}
+
+#rightcolumn {
+  display block;
+  width: 280px;
+  float: right;
+  margin-top: 25px;
+}
+
+/*** footer ***/
+#footer {
+  padding-top: 16px;
+  clear: both;
+  text-align: center;
+  color: #999999;
+}
+
+#gray {
+  display: inline;
+  color: #999999;
+}
+
+form {
+  margin-top: 2px;
+}
+
+#extra table {
+  margin-top:5px;
+}
+
+.options{
+  background-color: #e3f2fd;  
+  padding: 5px;
+  vertical-align: top;
+}
+
+#openaccess {
+  display: inline;
+  background-color: #ff9800;  
+  
+  padding: 1px;
+  font-size: 10px;
+  margin-right: 2px;
+}
+#openaccess a {
+  font-style: normal;
+  font-weight: bold;
+  text-decoration: none;
+  color: #FFFFFF;
+}
+
+#medlineindexed {
+  display: inline;
+  background-color: #4CAF50;  
+  
+  padding: 1px;
+  font-size: 10px;
+  margin-right: 2px;
+}
+#medlineindexed a {
+  font-style: normal;
+  font-weight: bold;
+  text-decoration: none;
+  color: #FFFFFF;
+}
+
+#pubmedcentral {
+  display: inline;
+  background-color: #2196F3;  
+  padding: 1px;
+  font-size: 10px;
+  margin-right: 2px;
+}
+
+#pubmedcentral a {
+  font-style: normal;
+  font-weight: bold;
+  text-decoration: none;
+  color: #FFFFFF;
+}
+
+#nihpa {
+  display: inline;
+  background-color: #de2727;  
+  padding: 1px;
+  font-size: 10px;
+  margin-right: 2px;
+}
+
+#nihpa a {
+  font-style: normal;
+  font-weight: bold;
+  text-decoration: none;
+  color: #FFFFFF;
+}
+
+/* ---------->>> jtip <<<---------------------------------------------------------------*/
+
+#JT_arrow_left{
+	background-image: url(images/arrow_left.gif);
+	background-repeat: no-repeat;
+	background-position: left top;
+	position: absolute;
+	z-index:101;
+	left:-12px;
+	height:23px;
+	width:10px;
+    top:-3px;
+}
+
+#JT_arrow_right{
+	background-image: url(images/arrow_right.gif);
+	background-repeat: no-repeat;
+	background-position: left top;
+	position: absolute;
+	z-index:101;
+	height:23px;
+	width:11px;
+    top:-2px;
+}
+
+#JT {
+	position: absolute;
+	z-index:100;
+	border: 2px solid #0063B0;
+	background-color: #fff;
+	color: #FFFFFF;
+}
+
+#JT_copy{
+	padding:10px 10px 10px 10px;
+	color:#333333;
+}
+
+.JT_loader{
+	background-image: url(images/loader.gif);
+	background-repeat: no-repeat;
+	background-position: center center;
+	width:100%;
+	height:12px;
+}
+
+#JT_close_left{
+	background-color: #0063B0;
+	text-align: left;
+	padding-left: 8px;
+	padding-bottom: 5px;
+	padding-top: 2px;
+	font-weight:bold;
+}
+
+#JT_close_right{
+	background-color: #0063B0;
+	text-align: left;
+	padding-left: 8px;
+	padding-bottom: 5px;
+	padding-top: 2px;
+	font-weight:bold;
+}
+
+#JT_copy p{
+margin:3px 0;
+}
+
+#JT_copy img{
+	padding: 1px;
+	border: 1px solid #CCCCCC;
+}
+
+.jTip{
+cursor:help;
+}
+
+
+.styledCheckbox
+   {
+   	height:13px;
+    	width:13px;
+   	filter:alpha(opacity=0.0);
+   	opacity:0.0;
+	outline:0
+   }
+   
+.styledCheckboxWrap
+{
+	position:relative;
+	float:left;
+	background:url("images/checkbox.gif") no-repeat top left;
+	width:13px;
+	height:13px;
+	margin:3px;
+}
+.wrapChecked{background-position: 0px -13px}
+.checkboxLabel{
+	float:left;
+	cursor:pointer
+}

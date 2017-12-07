@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project-modules id="moduleCoreId" project-version="1.5.0">
+    <wb-module deploy-name="JaneServer">
+        <wb-resource deploy-path="/" source-path="/WebContent"/>
+        <wb-resource deploy-path="/WEB-INF/classes" source-path="/src"/>
+        <dependent-module archiveName="lucene-queries-3.0.1-javadoc.jar" deploy-path="/WEB-INF/lib" handle="module:/classpath/lib/Jane Server/lib/lucene-queries-3.0.1-javadoc.jar">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="lucene-core-3.0.1.jar" deploy-path="/WEB-INF/lib" handle="module:/classpath/lib/Jane Server/lib/lucene-core-3.0.1.jar">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="lucene-queries-3.0.1.jar" deploy-path="/WEB-INF/lib" handle="module:/classpath/lib/Jane Server/lib/lucene-queries-3.0.1.jar">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="commons-discovery.jar" deploy-path="/WEB-INF/lib" handle="module:/classpath/lib/Jane Server/lib/commons-discovery.jar">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="commons-net-1.4.1.jar" deploy-path="/WEB-INF/lib" handle="module:/classpath/lib/Jane Server/lib/commons-net-1.4.1.jar">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="commons-codec-1.3.jar" deploy-path="/WEB-INF/lib" handle="module:/classpath/lib/Jane Server/lib/commons-codec-1.3.jar">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="commons-httpclient-3.0.1.jar" deploy-path="/WEB-INF/lib" handle="module:/classpath/lib/Jane Server/lib/commons-httpclient-3.0.1.jar">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="commons-logging.jar" deploy-path="/WEB-INF/lib" handle="module:/classpath/lib/Jane Server/lib/commons-logging.jar">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="MySQL.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/MySQL/MySQL">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="Medline.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/Medline/Medline">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="commons-httpclient-3.0.1.jar" deploy-path="/WEB-INF/lib" handle="module:/classpath/lib/JaneServer/lib/commons-httpclient-3.0.1.jar">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="commons-discovery.jar" deploy-path="/WEB-INF/lib" handle="module:/classpath/lib/JaneServer/lib/commons-discovery.jar">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="commons-logging.jar" deploy-path="/WEB-INF/lib" handle="module:/classpath/lib/JaneServer/lib/commons-logging.jar">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="commons-net-1.4.1.jar" deploy-path="/WEB-INF/lib" handle="module:/classpath/lib/JaneServer/lib/commons-net-1.4.1.jar">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="lucene-core-3.0.1.jar" deploy-path="/WEB-INF/lib" handle="module:/classpath/lib/JaneServer/lib/lucene-core-3.0.1.jar">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="commons-codec-1.3.jar" deploy-path="/WEB-INF/lib" handle="module:/classpath/lib/JaneServer/lib/commons-codec-1.3.jar">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="lucene-queries-3.0.1-javadoc.jar" deploy-path="/WEB-INF/lib" handle="module:/classpath/lib/JaneServer/lib/lucene-queries-3.0.1-javadoc.jar">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="lucene-queries-3.0.1.jar" deploy-path="/WEB-INF/lib" handle="module:/classpath/lib/JaneServer/lib/lucene-queries-3.0.1.jar">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="Common.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/Common/Common">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <property name="java-output-path" value="/Jane Server/build/classes"/>
+        <property name="context-root" value="JaneServer"/>
+    </wb-module>
+</project-modules>

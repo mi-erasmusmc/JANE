@@ -1,0 +1,7 @@
+English=eng
+French=fre
+German=ger
+Italian=ita
+Japanese=jpn
+Russian=rus
+Spanish=spa

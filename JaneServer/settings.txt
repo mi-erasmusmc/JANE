@@ -1,0 +1,4 @@
+logFile = /var/log/janeLog.txt
+indexFolder = /var/jane/index/
+k = 50
+requireDisambiguationForEMail = true
