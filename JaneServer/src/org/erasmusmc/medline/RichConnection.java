@@ -55,6 +55,11 @@ public class RichConnection {
 	
 	public RichConnection(String server, String domain, String user, String password, DbType dbType) {
 		this.connection = DBConnector.connect(server, domain, user, password, dbType);
+		try {
+			connection.setAutoCommit(false);
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
 		this.dbType = dbType;
 	}
 	
@@ -298,9 +303,9 @@ public class RichConnection {
 	public void use(String database) {
 		if (database == null)
 			return;
-		if (dbType == DbType.ORACLE)
+		if (dbType.equals(DbType.ORACLE))
 			execute("ALTER SESSION SET current_schema = " + database);
-		else if (dbType == DbType.POSTGRESQL || dbType == DbType.REDSHIFT)
+		else if (dbType.equals(DbType.POSTGRESQL) || dbType.equals(DbType.REDSHIFT))
 			execute("SET SEARCH_PATH TO " + database);
 		else
 			execute("USE " + database);

@@ -28,7 +28,7 @@ import org.erasmusmc.utilities.WriteTextFile;
 
 public class MedlineTools {
 	
-	public static RetrieveSettings	defaultSettings	= RetrieveSettings.loadDatabaseSettingsFromIniFile("c:/temp/Medline.ini");
+	public static RetrieveSettings	defaultSettings	= RetrieveSettings.loadDatabaseSettingsFromIniFile("S:\\Data\\MEDLINE\\Unprocessed\\MedlineParser.ini");
 	public static GregorianCalendar	calendar		= new GregorianCalendar();
 	
 	public static void saveAllPMIDsInDatabase(String filename) {
@@ -62,8 +62,7 @@ public class MedlineTools {
 			connection.execute("SET DateFormat MDY;");
 			sql = "SELECT pmid FROM pmid_to_date WHERE pmid_version = 1 AND date >= '" + format(start) + "' AND date <= '" + format(end) + "' ORDER BY pmid";
 		} else {
-			sql = "SELECT pmid FROM pmid_to_date WHERE pmid_version = 1 AND date >= \"" + format(start) + "\" AND date <= \"" + format(end)
-					+ "\" ORDER BY pmid";
+			sql = "SELECT pmid FROM pmid_to_date WHERE pmid_version = 1 AND date >= '" + format(start) + "' AND date <= '" + format(end) + "' ORDER BY pmid";
 		}
 		QueryResult queryResult = connection.query(sql);
 		WriteCSVFileWithHeader out = new WriteCSVFileWithHeader(filename);

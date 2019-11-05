@@ -480,12 +480,17 @@ public class RetrieveCitationsThread extends BatchProcessingThread {
 	}
 	
 	private void connectToSchema(String schema) {
-		StringBuilder sql = new StringBuilder();
+		String sql;
+		if (settings.dateSourceType.equals(DbType.ORACLE))
+			sql = "ALTER SESSION SET current_schema = " + schema;
+		else if (settings.dateSourceType.equals(DbType.POSTGRESQL) || settings.dateSourceType.equals(DbType.REDSHIFT))
+			sql = "SET SEARCH_PATH TO " + schema;
+		else
+			sql = "USE " + schema;
 		try {
 			// Connect to correct database;
 			Statement statement = connection.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_UPDATABLE);
-			sql.append("USE " + schema + ";");
-			statement.execute(sql.toString());
+			statement.execute(sql);
 			statement.close();
 		} catch (SQLException e) {
 			System.err.println("SQL: " + sql.toString());

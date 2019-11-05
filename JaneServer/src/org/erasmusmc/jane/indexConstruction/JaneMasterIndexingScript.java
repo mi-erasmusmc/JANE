@@ -46,6 +46,7 @@ public class JaneMasterIndexingScript {
 	public static String	tempFolder		= "S:/Data/JANE/temp/";
 	
 	// Did you remember to delete the old index folder?!
+	// Manually download the two files below
 	
 	public static void main(String[] args) {
 		Calendar tenYearsAgo = new GregorianCalendar();
@@ -57,24 +58,26 @@ public class JaneMasterIndexingScript {
 		Calendar future = new GregorianCalendar();
 		future.add(Calendar.YEAR, 10);
 		
-		System.out.println(StringUtilities.now() + "\tFetching relevant PMIDs");
-		MedlineTools.savePMIDsInTimeRange(tempFolder + "Jane.PMIDs", tenYearsAgo.getTime(), future.getTime());
-		
-		System.out.println(StringUtilities.now() + "\tFetching PMIDs of recent papers");
-		MedlineTools.savePMIDsInTimeRange(tempFolder + "Jane_Recent.PMIDs", oneYearAgo.getTime(), future.getTime());
+//		System.out.println(StringUtilities.now() + "\tFetching relevant PMIDs");
+//		MedlineTools.savePMIDsInTimeRange(tempFolder + "Jane.PMIDs", tenYearsAgo.getTime(), future.getTime());
+//		
+//		System.out.println(StringUtilities.now() + "\tFetching PMIDs of recent papers");
+//		MedlineTools.savePMIDsInTimeRange(tempFolder + "Jane_Recent.PMIDs", oneYearAgo.getTime(), future.getTime());
 		
 		System.out.println(StringUtilities.now() + "\tFinding journals for all papers");
 		PMIDs2PMIDsPerJournal.main(new String[] { tempFolder + "Jane.PMIDs", tempFolder + "Jane_Journal2PMID.txt", "medlineabbr" });
 		PMIDs2PMIDsPerJournal.main(new String[] { tempFolder + "Jane_Recent.PMIDs", tempFolder + "Jane_Journal2PMID_Recent.txt", "medlineabbr" });
 		
-		System.out.println(StringUtilities.now() + "\tFetching Medline journals database");
-		downloadFileFTP("ftp.ncbi.nih.gov", "pubmed", "J_Medline.txt", tempFolder + "J_Medline.txt");
+		// No longer works automatically. Download manually using Filezilla
+//		System.out.println(StringUtilities.now() + "\tFetching Medline journals database");
+//		downloadFileFTP("ftp.ncbi.nih.gov", "/pubmed/.J", "J_Medline.txt", tempFolder + "J_Medline.txt");
 		
 		System.out.println(StringUtilities.now() + "\tFetching list of journals currently indexed in MEDLINE");
 		OnlinePubmed.saveIndexedJournalIds(tempFolder + "indexedJournals.txt", "schuemie@ohdsi.org");
 		
-		System.out.println(StringUtilities.now() + "\tFetching doaj file");
-		downloadFile("https://doaj.org/csv", tempFolder + "doaj.csv");
+		// No longer works automatically. Download manually from https://doaj.org/csv
+//		System.out.println(StringUtilities.now() + "\tFetching doaj file");
+//		downloadFile("https://doaj.org", tempFolder + "csv");
 		
 		System.out.println(StringUtilities.now() + "\tFetching PubMed Central file");
 		downloadFile("https://www.ncbi.nlm.nih.gov/pmc/front-page/jlist.csv", tempFolder + "jlist.csv");
@@ -128,10 +131,10 @@ public class JaneMasterIndexingScript {
 	}
 	
 	private static void downloadFileFTP(String host, String dir, String remoteFile, String localFilename) {
-		FTPClient client = new FTPClient();
+		FTPClient client = new FTPClient(); 
 		try {
 			client.connect(host);
-			client.login("anonymous", "m.schuemie@erasmusmc.nl");
+			client.login("anonymous", "schuemie@ohdsi.org");
 			client.changeWorkingDirectory(dir);
 			OutputStream os = new FileOutputStream(new File(localFilename));
 			InputStream is = client.retrieveFileStream(remoteFile);
