@@ -10,7 +10,7 @@ class JaneSuggestions {
   private $medlineindexedString = "";
   private $pubmedcentralString = "";
   private $text = "";
-  public $paperURLTemplate = "http://www.ncbi.nlm.nih.gov/sites/entrez?cmd=Retrieve&db=PubMed&list_uids=%pmid";
+  public $paperURLTemplate = "https://pubmed.ncbi.nlm.nih.gov/%pmid";
 
   public function __construct(){
     $this->client = new SoapClient("http://localhost:8080/JaneServer/services/JaneSOAPServer?wsdl");
