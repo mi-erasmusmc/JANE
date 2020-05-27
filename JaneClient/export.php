@@ -1,5 +1,5 @@
 <?php
-  $url = 'http://www.ncbi.nlm.nih.gov/pubmed/';
+  $url = 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&id=';
   $first = true;
   foreach ($_POST as $var => $value) {
     if (strpos($var, 'PMID') === 0){
@@ -10,7 +10,7 @@
       $url = $url . $value;
     }
   }
-  $url = $url . '?report=medline&format=text';
+  $url = $url . '&retmode=text&rettype=medline';
 
   header('Content-type: text/plain');
   header('Content-Disposition: attachment; filename="MEDLINECitationsFromJane.nbib"');
