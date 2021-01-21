@@ -91,8 +91,9 @@ public class RetrieveCitationsThread extends BatchProcessingThread {
 			if (settings.retrieveCitationInformation)
 				sql.append("," + "art_journal_title," + "art_journal_isoabbreviation," + "medlinejournalinfo_medlineta," + "art_journal_issn,"
 						+ "medlinejournalinfo_issnlinking," + "art_journal_journalissue_volume," + "art_journal_journalissue_issue,"
-						+ "art_pagination_medlinepgn," + "art_journal_journalissue_pubdate_year," + "art_journal_journalissue_pubdate_season,"
-						+ "art_journal_journalissue_pubdate_month," + "art_journal_journalissue_pubdate_day," + "art_journal_journalissue_pubdate_medlinedate");
+						+ "art_pagination_medlinepgn," + "art_artdate_day," + "art_artdate_month," + "art_artdate_year,"
+						+ "art_journal_journalissue_pubdate_year," + "art_journal_journalissue_pubdate_season," + "art_journal_journalissue_pubdate_month,"
+						+ "art_journal_journalissue_pubdate_day," + "art_journal_journalissue_pubdate_medlinedate");
 			
 			sql.append(" FROM medcit WHERE pmid_version = 1 AND pmid IN ");
 			sql.append(pmidString);
@@ -118,9 +119,11 @@ public class RetrieveCitationsThread extends BatchProcessingThread {
 					medlineCitation.volume = resultSet.getString("art_journal_journalissue_volume");
 					medlineCitation.issue = resultSet.getString("art_journal_journalissue_issue");
 					medlineCitation.pages = resultSet.getString("art_pagination_medlinepgn");
-					medlineCitation.publicationDate = parseDate(resultSet.getString("art_journal_journalissue_pubdate_year"),
-							resultSet.getString("art_journal_journalissue_pubdate_season"), resultSet.getString("art_journal_journalissue_pubdate_month"),
-							resultSet.getString("art_journal_journalissue_pubdate_day"), resultSet.getString("art_journal_journalissue_pubdate_medlinedate"));
+					medlineCitation.publicationDate = parseDate(resultSet.getString("art_artdate_year"),
+							resultSet.getString("art_artdate_month"), resultSet.getString("art_artdate_day"),
+							resultSet.getString("art_journal_journalissue_pubdate_year"), resultSet.getString("art_journal_journalissue_pubdate_season"),
+							resultSet.getString("art_journal_journalissue_pubdate_month"), resultSet.getString("art_journal_journalissue_pubdate_day"),
+							resultSet.getString("art_journal_journalissue_pubdate_medlinedate"));
 				}
 			}
 			statement.close();
@@ -418,47 +421,77 @@ public class RetrieveCitationsThread extends BatchProcessingThread {
 		return result;
 	}
 	
-	private Date parseDate(String yearString, String seasonString, String monthString, String dayString, String medlineString) {
-		int year = 0;
-		if (yearString == null) {
-			if (medlineString == null)
-				return null;
-			
-			for (Integer i = 1950; i < 2100; i++)
-				if (medlineString.contains(i.toString())) {
-					year = i;
-					break;
-				}
-			if (year == 0)
-				return null;
-		} else {
+	private Date parseDate(String yearString, String monthString, String dayString, String journalYearString, String journalSeasonString, String journalMonthString, String journalDayString, String medlineString) {
+		int year = -1;
+		int month = -1;
+		int day = 1;
+		// First try to parse article date:
+		if (yearString != null) {
 			year = Integer.parseInt(yearString);
+			if (year < 1950 || year > 2100)
+				year = -1;
+			else {
+				if (monthString != null) 
+					month = Integer.parseInt(monthString) - 1;
+				if (dayString != null) 
+					day = Integer.parseInt(dayString);
+			}
 		}
-		int month = 0;
-		if (monthString == null) {
+		// Next, try to parse journal date:
+		if (year == -1 || month == -1) {
+			if (journalYearString != null) {
+				year = Integer.parseInt(journalYearString);
+				if (year < 1950 || year > 2100)
+					year = -1;
+				else {
+					if (journalMonthString != null) {
+						month = months.indexOf(journalMonthString);
+						if (month == -1)
+							try {
+								month = Integer.parseInt(journalMonthString) - 1;
+							} catch(Exception e) {
+								month = -1;
+							}
+					}
+					if (month == -1 && journalSeasonString != null) {
+						if (journalSeasonString.equals("Spring"))
+							month = 2;
+						if (journalSeasonString.equals("Summer"))
+							month = 5;
+						if (journalSeasonString.equals("Fall"))
+							month = 8;
+						if (journalSeasonString.equals("Winter"))
+							month = 11;
+					}
+					if (journalDayString != null) 
+						day = Integer.parseInt(journalDayString);
+				}
+			}
+		}
+		// Finally, try to parse medlineString:
+		if (year == -1 || month == -1) 
 			if (medlineString != null) {
+				for (Integer i = 1950; i < 2100; i++)
+					if (medlineString.contains(i.toString())) {
+						year = i;
+						break;
+					}
 				for (int i = 0; i < months.size(); i++) {
 					if (medlineString.contains(months.get(i))) {
 						month = i;
 						break;
 					}
 				}
+				day = 1;
 			}
-			if (month == 0 && seasonString != null) {
-				if (seasonString.equals("Spring"))
-					month = 2;
-				if (seasonString.equals("Summer"))
-					month = 5;
-				if (seasonString.equals("Fall"))
-					month = 8;
-				if (seasonString.equals("Winter"))
-					month = 11;
-			}
-		} else {
-			month = months.indexOf(monthString);
-		}
-		int day = dayString == null ? 1 : Integer.parseInt(dayString);
-		return new GregorianCalendar(year, month, day).getTime();
+		
+		if (year != -1 && month == -1)
+			month = 0;
+		
+		if (year == -1 || month == -1) 
+			return null;
+		else
+			return new GregorianCalendar(year, month, day).getTime();
 	}
 	
 	private MedlineCitation getCitation(int pmid) {

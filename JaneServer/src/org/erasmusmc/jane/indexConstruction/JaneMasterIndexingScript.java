@@ -36,9 +36,16 @@ import javax.net.ssl.X509TrustManager;
 
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.io.Util;
+import org.erasmusmc.medline.Author;
+import org.erasmusmc.medline.MedlineCitation;
+import org.erasmusmc.medline.MedlineCitationIterator;
+import org.erasmusmc.medline.MedlineCitationTools;
 import org.erasmusmc.medline.MedlineTools;
 import org.erasmusmc.medline.OnlinePubmed;
+import org.erasmusmc.medline.RetrieveCitationsThread;
+import org.erasmusmc.medline.RetrieveSettings;
 import org.erasmusmc.utilities.StringUtilities;
+import org.erasmusmc.utilities.WriteCSVFileWithHeader;
 
 public class JaneMasterIndexingScript {
 	public static String	indexFolder		= "S:/Data/JANE/indexNew/";
@@ -58,11 +65,11 @@ public class JaneMasterIndexingScript {
 		Calendar future = new GregorianCalendar();
 		future.add(Calendar.YEAR, 10);
 		
-//		System.out.println(StringUtilities.now() + "\tFetching relevant PMIDs");
-//		MedlineTools.savePMIDsInTimeRange(tempFolder + "Jane.PMIDs", tenYearsAgo.getTime(), future.getTime());
-//		
-//		System.out.println(StringUtilities.now() + "\tFetching PMIDs of recent papers");
-//		MedlineTools.savePMIDsInTimeRange(tempFolder + "Jane_Recent.PMIDs", oneYearAgo.getTime(), future.getTime());
+		System.out.println(StringUtilities.now() + "\tFetching relevant PMIDs");
+		MedlineTools.savePMIDsInTimeRange(tempFolder + "Jane.PMIDs", tenYearsAgo.getTime(), future.getTime());
+		
+		System.out.println(StringUtilities.now() + "\tFetching PMIDs of recent papers");
+		MedlineTools.savePMIDsInTimeRange(tempFolder + "Jane_Recent.PMIDs", oneYearAgo.getTime(), future.getTime());
 		
 		System.out.println(StringUtilities.now() + "\tFinding journals for all papers");
 		PMIDs2PMIDsPerJournal.main(new String[] { tempFolder + "Jane.PMIDs", tempFolder + "Jane_Journal2PMID.txt", "medlineabbr" });
