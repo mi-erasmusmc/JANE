@@ -347,10 +347,10 @@ public class RetrieveCitationsThread extends BatchProcessingThread {
 	private void retrieveFromMedcit_art_authorlist_author(String pmidString) {
 		StringBuilder sql = new StringBuilder();
 		try {
-			sql.append("SELECT au.pmid, affiliation, collectivename, forename, initials, lastname, suffix, au.medcit_art_authorlist_author_order");
+			sql.append("SELECT au.pmid, aff, collectivename, forename, initials, lastname, suffix, au.medcit_art_authorlist_author_order");
 			sql.append(" FROM medcit_art_authorlist_author au");
 			sql.append(" LEFT JOIN (");
-			sql.append("   SELECT * FROM  medcit_art_authorlist_author_affiliationinfo WHERE medcit_art_authorlist_author_affiliationinfo_order = 1");
+			sql.append("   SELECT * FROM  medcit_art_authorlist_author_affinfo WHERE medcit_art_authorlist_author_affinfo_order = 1");
 			sql.append(" ) ai");
 			sql.append(" ON au.pmid = ai.pmid");
 			sql.append(" AND au.pmid_version = ai.pmid_version");
@@ -372,7 +372,7 @@ public class RetrieveCitationsThread extends BatchProcessingThread {
 				author.initials = resultSet.getString("initials");
 				author.lastname = resultSet.getString("lastname");
 				author.suffix = resultSet.getString("suffix");
-				author.affiliation = resultSet.getString("affiliation");
+				author.affiliation = resultSet.getString("aff");
 				
 				medlineCitation.authors.add(author);
 			}
