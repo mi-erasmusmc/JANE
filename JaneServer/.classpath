@@ -11,8 +11,8 @@
 	<classpathentry exported="true" kind="lib" path="lib/lucene-queries-3.0.1.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/lucene-queries-3.0.1-javadoc.jar"/>
 	<classpathentry kind="lib" path="lib/SqlRender.jar"/>
-	<classpathentry kind="lib" path="lib/postgresql-9.3-1101.jdbc41.jar"/>
 	<classpathentry kind="lib" path="lib/sqljdbc4.jar"/>
+	<classpathentry kind="lib" path="lib/postgresql-42.5.1.jar"/>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.6">
 		<attributes>
