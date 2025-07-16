@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2017 Erasmus University Medical Center
+ * Copyright 2025 Erasmus University Medical Center
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,69 +15,107 @@
  ******************************************************************************/
 package org.erasmusmc.medline;
 
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
-import java.util.Iterator;
+import java.util.concurrent.TimeUnit;
 
-import org.erasmusmc.medline.RichConnection.QueryResult;
-import org.erasmusmc.utilities.Row;
-import org.erasmusmc.utilities.WriteCSVFileWithHeader;
 import org.erasmusmc.utilities.WriteTextFile;
 
 public class MedlineTools {
-	
-	public static RetrieveSettings	defaultSettings	= RetrieveSettings.loadDatabaseSettingsFromIniFile("S:\\Data\\MEDLINE\\Unprocessed\\MedlineParser.ini");
-	public static GregorianCalendar	calendar		= new GregorianCalendar();
-	
-	public static void saveAllPMIDsInDatabase(String filename) {
-		saveAllPMIDsInDatabase(filename, defaultSettings.server, defaultSettings.database, null, defaultSettings.user, defaultSettings.password,
-				defaultSettings.dateSourceType);
-	}
-	
-	public static void saveAllPMIDsInDatabase(String filename, String server, String database, String domain, String user, String password, DbType sourceType) {
-		RichConnection connection = new RichConnection(server, domain, user, password, sourceType);
-		connection.use(database);
-		Iterator<Row> iterator = connection.query("SELECT DISTINCT pmid FROM medcit ORDER BY pmid").iterator();
-		WriteTextFile out = new WriteTextFile(filename);
-		while (iterator.hasNext()) {
-			out.writeln(iterator.next().get("pmid"));
+
+	public static GregorianCalendar calendar = new GregorianCalendar();
+
+	private Connection connection;
+
+	public MedlineTools(String pathToSqlite) {
+		try {
+			Class.forName("org.sqlite.JDBC");
+		} catch (ClassNotFoundException e) {
+			e.printStackTrace();
 		}
-		out.close();
-	}
-	
-	public static void savePMIDsInTimeRange(String filename, Date start, Date end) {
-		savePMIDsInTimeRange(filename, start, end, defaultSettings.server, defaultSettings.database, null, defaultSettings.user, defaultSettings.password,
-				defaultSettings.dateSourceType);
-	}
-	
-	public static void savePMIDsInTimeRange(String filename, Date start, Date end, String server, String database, String domain, String user, String password,
-			DbType sourceType) {
-		
-		RichConnection connection = new RichConnection(server, domain, user, password, sourceType);
-		connection.use(database);
-		String sql;
-		if (sourceType.equals(DbType.MSSQL)) {
-			connection.execute("SET DateFormat MDY;");
-			sql = "SELECT pmid FROM pmid_to_date WHERE pmid_version = 1 AND date >= '" + format(start) + "' AND date <= '" + format(end) + "' ORDER BY pmid";
-		} else {
-			sql = "SELECT pmid FROM pmid_to_date WHERE pmid_version = 1 AND date >= '" + format(start) + "' AND date <= '" + format(end) + "' ORDER BY pmid";
+		try {
+			connection = DriverManager.getConnection("jdbc:sqlite:" + pathToSqlite);
+		} catch (SQLException e) {
+			e.printStackTrace();
 		}
-		QueryResult queryResult = connection.query(sql);
-		WriteCSVFileWithHeader out = new WriteCSVFileWithHeader(filename);
-		int count = 0;
-		for (Row row : queryResult) {
-			out.write(row);
-			count++;
-		}
-		SimpleDateFormat format = new SimpleDateFormat("MMM dd, yyyy");
-		System.out.println("Found " + count + " PMIDs published between " + format.format(start) + " and " + format.format(end));
-		out.close();
 	}
 	
+	protected void finalize() {
+		try {
+			connection.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public static void main(String[] args) throws Exception {
+//		Calendar oneYearAgo = new GregorianCalendar();
+//		oneYearAgo.add(Calendar.YEAR, -40);
+//		
+//		Calendar future = new GregorianCalendar();
+//		future.add(Calendar.YEAR, 10);
+//		
+//		MedlineTools medlineTools = new MedlineTools("E:/Medline/PubMed.sqlite");
+//		medlineTools.savePMIDsInTimeRange("E:/Medline/test.txt", oneYearAgo.getTime(), future.getTime());
+		Class.forName("org.sqlite.JDBC");
+		Connection connection = DriverManager.getConnection("jdbc:sqlite:" + "E:/Medline/PubMed.sqlite");
+		String sql = "SELECT * FROM pubmed_articles WHERE pmid = 32132887;";
+		Statement statement = connection.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+		ResultSet resultSet = statement.executeQuery(sql);
+		while (resultSet.next()) {
+			System.out.println(resultSet.getString("file_number"));
+		}
+		connection.close();
+	}
+
+	public void savePMIDsInTimeRange(String filename, Date start, Date end) {
+		try {
+			String sql = "SELECT pmid FROM pubmed_articles WHERE publication_date >= " + format(start)
+					+ " AND publication_date <= " + format(end) + " ORDER BY pmid";
+			Statement statement = connection.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+			ResultSet resultSet = statement.executeQuery(sql);
+			WriteTextFile out = new WriteTextFile(filename);
+			int count = 0;
+			while (resultSet.next()) {
+				out.writeln(resultSet.getString("pmid"));
+				count++;
+			}
+			SimpleDateFormat format = new SimpleDateFormat("MMM dd, yyyy");
+			System.out.println("Found " + count + " PMIDs published between " + format.format(start) + " and "
+					+ format.format(end));
+			out.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+
 	private static String format(Date date) {
-		calendar.setTime(date);
-		return calendar.get(Calendar.YEAR) + "-" + (calendar.get(Calendar.MONTH) + 1) + "-" + calendar.get(Calendar.DATE);
+        Calendar year1Epoch = new GregorianCalendar(1, Calendar.JANUARY, 1);
+        year1Epoch.set(Calendar.HOUR_OF_DAY, 0);
+        year1Epoch.set(Calendar.MINUTE, 0);
+        year1Epoch.set(Calendar.SECOND, 0);
+        year1Epoch.set(Calendar.MILLISECOND, 0);
+
+        Calendar targetDateCal = new GregorianCalendar();
+        targetDateCal.setTime(date);
+        targetDateCal.set(Calendar.HOUR_OF_DAY, 0);
+        targetDateCal.set(Calendar.MINUTE, 0);
+        targetDateCal.set(Calendar.SECOND, 0);
+        targetDateCal.set(Calendar.MILLISECOND, 0);
+        targetDateCal.setTimeZone(java.util.TimeZone.getTimeZone("UTC"));
+        year1Epoch.setTimeZone(java.util.TimeZone.getTimeZone("UTC"));
+
+        long diffMillis = targetDateCal.getTimeInMillis() - year1Epoch.getTimeInMillis();
+        long millisecondsInADay = TimeUnit.DAYS.toMillis(1);
+        long daysBetween = diffMillis / millisecondsInADay;
+        long pythonLikeOrdinal = daysBetween + 1;
+		return Long.toString(pythonLikeOrdinal);
 	}
 }

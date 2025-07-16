@@ -12,41 +12,30 @@ import java.util.Map;
 
 import org.erasmusmc.medline.MedlineCitation;
 import org.erasmusmc.medline.MedlineCitationIterator;
-import org.erasmusmc.medline.MedlineTools;
 import org.erasmusmc.medline.RetrieveSettings;
 
-public class PMIDs2PMIDsPerJournal {
-	private static int							type;
-	private static int							JOURNALNAME	= 0;
-	private static int							ISSN		= 1;
-	private static int							JOURNALABBR	= 2;
-	
-	public static Map<String, List<Integer>>	titles;
-	
-	/**
-	 * First parameter: name of PMID file Second parameter: name of output file Third parameter: "issn", "journaltitle", "medlineabbr"
-	 * 
-	 * @param args
-	 */
-	public static void main(String[] args) {
-		if (args[2].equals("issn"))
-			type = ISSN;
-		else if (args[2].equals("medlineabbr"))
-			type = JOURNALABBR;
-		else
-			type = JOURNALNAME;
-		RetrieveSettings fetchSettings = MedlineTools.defaultSettings;
-		fetchSettings.retrieveCitationInformation = true;
-		fetchSettings.pmidsFile = args[0];
-		MedlineCitationIterator iterator = new MedlineCitationIterator(fetchSettings);
+public class PmidsToPmidsInJournal {
+
+	private Map<String, List<Integer>> titles;
+	private String pathToSqlite;
+
+	public PmidsToPmidsInJournal(String pathToSqlite) {
+		this.pathToSqlite = pathToSqlite;
+	}
+
+	public void getJournalsToPmids(String pmidsFile, String outputFile) {
+		RetrieveSettings retrieveSettings = new RetrieveSettings();
+		retrieveSettings.pathToSqlite = pathToSqlite;
+		retrieveSettings.pmidsFile = pmidsFile;
+		MedlineCitationIterator iterator = new MedlineCitationIterator(retrieveSettings);
 		titles = new HashMap<String, List<Integer>>();
 		while (iterator.hasNext())
 			processMedlineRecords(iterator.next());
-		saveTitles(args[1]);
+		saveTitles(outputFile);
 		titles = null;
 	}
-	
-	private static void saveTitles(String filename) {
+
+	private void saveTitles(String filename) {
 		try {
 			FileOutputStream PSFFile = new FileOutputStream(filename);
 			BufferedWriter bufferedWrite = new BufferedWriter(new OutputStreamWriter(PSFFile), 1000000);
@@ -62,7 +51,7 @@ public class PMIDs2PMIDsPerJournal {
 					bufferedWrite.write(line.toString());
 					bufferedWrite.newLine();
 				}
-				
+
 				bufferedWrite.flush();
 				bufferedWrite.close();
 			} catch (IOException e) {
@@ -72,15 +61,9 @@ public class PMIDs2PMIDsPerJournal {
 			e.printStackTrace();
 		}
 	}
-	
-	public static void processMedlineRecords(MedlineCitation citation) {
-		String title;
-		if (type == ISSN)
-			title = citation.journal.issn;
-		else if (type == JOURNALABBR)
-			title = citation.journal.medlineTA;
-		else
-			title = citation.journal.title.trim();
+
+	public void processMedlineRecords(MedlineCitation citation) {
+		String title = citation.journal.medlineTA;
 		List<Integer> pmids = titles.get(title);
 		if (pmids == null) {
 			pmids = new ArrayList<Integer>();

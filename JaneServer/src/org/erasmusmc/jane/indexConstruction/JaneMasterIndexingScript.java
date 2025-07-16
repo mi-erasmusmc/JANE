@@ -48,46 +48,50 @@ import org.erasmusmc.utilities.StringUtilities;
 import org.erasmusmc.utilities.WriteCSVFileWithHeader;
 
 public class JaneMasterIndexingScript {
-	public static String	indexFolder		= "S:/Data/JANE/indexNew/";
-	public static String	eigenfactorFile	= "S:/Data/JANE/EF_2015.txt";
-	public static String	tempFolder		= "S:/Data/JANE/temp/";
+	public static String    pathToSql       = "E:/Medline/PubMed.sqlite";
+	public static String	indexFolder		= "c:/temp/indexNew/";
+	public static String	eigenfactorFile	= "E:/Jane/EF_2015.txt";
+	public static String	tempFolder		= "E:/Jane/temp/";
+	
+	// Probably also need to set the path in org/erasmusmc/medline/MedlineTools.java
 	
 	// Did you remember to delete the old index folder?!
 	// Manually download the two files below
 	
 	public static void main(String[] args) {
-		Calendar tenYearsAgo = new GregorianCalendar();
-		tenYearsAgo.add(Calendar.YEAR, -10);
-		
-		Calendar oneYearAgo = new GregorianCalendar();
-		oneYearAgo.add(Calendar.YEAR, -1);
-		
-		Calendar future = new GregorianCalendar();
-		future.add(Calendar.YEAR, 10);
-		
-		System.out.println(StringUtilities.now() + "\tFetching relevant PMIDs");
-		MedlineTools.savePMIDsInTimeRange(tempFolder + "Jane.PMIDs", tenYearsAgo.getTime(), future.getTime());
-		
-		System.out.println(StringUtilities.now() + "\tFetching PMIDs of recent papers");
-		MedlineTools.savePMIDsInTimeRange(tempFolder + "Jane_Recent.PMIDs", oneYearAgo.getTime(), future.getTime());
-		
-		System.out.println(StringUtilities.now() + "\tFinding journals for all papers");
-		PMIDs2PMIDsPerJournal.main(new String[] { tempFolder + "Jane.PMIDs", tempFolder + "Jane_Journal2PMID.txt", "medlineabbr" });
-		PMIDs2PMIDsPerJournal.main(new String[] { tempFolder + "Jane_Recent.PMIDs", tempFolder + "Jane_Journal2PMID_Recent.txt", "medlineabbr" });
-		
-		// No longer works automatically. Download manually using Filezilla
+//		Calendar tenYearsAgo = new GregorianCalendar();
+//		tenYearsAgo.add(Calendar.YEAR, -10);
+//		
+//		Calendar oneYearAgo = new GregorianCalendar();
+//		oneYearAgo.add(Calendar.YEAR, -1);
+//		
+//		Calendar future = new GregorianCalendar();
+//		future.add(Calendar.YEAR, 10);
+//		
+//		System.out.println(StringUtilities.now() + "\tFetching relevant PMIDs");
+//		MedlineTools medlineTools = new MedlineTools(pathToSql);
+//		medlineTools.savePMIDsInTimeRange(tempFolder + "Jane.PMIDs", tenYearsAgo.getTime(), future.getTime());
+//		
+//		System.out.println(StringUtilities.now() + "\tFetching PMIDs of recent papers");
+//		medlineTools.savePMIDsInTimeRange(tempFolder + "Jane_Recent.PMIDs", oneYearAgo.getTime(), future.getTime());
+//		
+//		System.out.println(StringUtilities.now() + "\tFinding journals for all papers");
+//		PmidsToPmidsInJournal pmidsToPmidsInJournal = new PmidsToPmidsInJournal(pathToSql);
+//		pmidsToPmidsInJournal.getJournalsToPmids(tempFolder + "Jane.PMIDs", tempFolder + "Jane_Journal2PMID.txt");
+//		pmidsToPmidsInJournal.getJournalsToPmids(tempFolder + "Jane_Recent.PMIDs", tempFolder + "Jane_Journal2PMID_Recent.txt");
+//		
 //		System.out.println(StringUtilities.now() + "\tFetching Medline journals database");
 //		downloadFileFTP("ftp.ncbi.nih.gov", "/pubmed/.J", "J_Medline.txt", tempFolder + "J_Medline.txt");
-		
-		System.out.println(StringUtilities.now() + "\tFetching list of journals currently indexed in MEDLINE");
-		OnlinePubmed.saveIndexedJournalIds(tempFolder + "indexedJournals.txt", "schuemie@ohdsi.org");
-		
-		// No longer works automatically. Download manually from https://doaj.org/csv
-//		System.out.println(StringUtilities.now() + "\tFetching doaj file");
-//		downloadFile("https://doaj.org", tempFolder + "csv");
-		
-		System.out.println(StringUtilities.now() + "\tFetching PubMed Central file");
-		downloadFile("https://www.ncbi.nlm.nih.gov/pmc/front-page/jlist.csv", tempFolder + "jlist.csv");
+//		
+//		System.out.println(StringUtilities.now() + "\tFetching list of journals currently indexed in MEDLINE");
+//		OnlinePubmed.saveIndexedJournalIds(tempFolder + "indexedJournals.txt", "schuemie@ohdsi.org");
+//		
+//		// No longer works automatically. Download manually from https://doaj.org/csv
+////		System.out.println(StringUtilities.now() + "\tFetching doaj file");
+////		downloadFile("https://doaj.org/csv", tempFolder + "doaj.csv");
+////		
+//		System.out.println(StringUtilities.now() + "\tFetching PubMed Central file");
+//		downloadFile("https://cdn.ncbi.nlm.nih.gov/pmc/home/jlist.csv", tempFolder + "jlist.csv");
 		
 		System.out.println(StringUtilities.now() + "\tIndexing articles");
 		JournalIndexerSettings settings = new JournalIndexerSettings();

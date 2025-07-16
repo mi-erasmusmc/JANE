@@ -39,6 +39,25 @@ public class MedlineCitationIterator implements Iterator<MedlineCitation>{
 			startFetch();
 		} while (!bufferIterator.hasNext() && isFetching);
 	}
+	
+	public static void main(String[] args) {
+		RetrieveSettings settings = new RetrieveSettings();
+		settings.pathToSqlite = "E:/Medline/PubMed2.sqlite";
+		settings.pmidsFile = "E:/Medline/test.txt";
+		MedlineCitationIterator iterator = new MedlineCitationIterator(settings);
+		int count = 0;
+		while (iterator.hasNext()) {
+			MedlineCitation citation = iterator.next();
+			System.out.println(citation.pmid);
+//			for (String author : citation.authors)
+//				System.out.println(author);
+			for (String affiliation : citation.affiliations)
+				System.out.println(affiliation);
+			count++;
+			if (count == 1000)
+				break;
+		}
+	}
 
 	private void copyFetchedToBuffer() {
 		if (isFetching)

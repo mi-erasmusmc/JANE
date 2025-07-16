@@ -35,27 +35,27 @@ import org.erasmusmc.utilities.StringUtilities;
 import org.erasmusmc.utilities.WriteTextFile;
 
 public class JournalIndexer {
-	public static int						minPMIDsPerJournal	= 20;
-	public static int						maxJournalLength	= 80;
-	public static Set<String>				ignorePubTypes		= getIgnorePubTypes();
-	
-	private int								insertCount			= 0;
-	private int								medlineCount		= 0;
-	private WriteTextFile					outfile;
-	private JournalIndexerSettings			settings;
-	private GregorianCalendar				calendar			= new GregorianCalendar();
-	private EigenFactorData					defaultData;
-	private Set<String>						openAccessJournals;
-	private Map<String, Integer>			issn2pmcMonths;
-	private Map<String, EigenFactorData>	issn2eigenfactordata;
-	private IndexWriter						writer;
-	private Set<String>						recentJournals		= null;
-	private Set<String>                     medlineIndexedNlmIds = null;
-	private Set<String>                     medlineIndexedIssns = null;
-	private Map<String, String>				issn2title;
-	private Map<String, List<String>>		title2issn;
-	private Map<String, String>				issn2issn;
-	
+	public static int minPMIDsPerJournal = 20;
+	public static int maxJournalLength = 80;
+	public static Set<String> ignorePubTypes = getIgnorePubTypes();
+
+	private int insertCount = 0;
+	private int medlineCount = 0;
+	private WriteTextFile outfile;
+	private JournalIndexerSettings settings;
+	private GregorianCalendar calendar = new GregorianCalendar();
+	private EigenFactorData defaultData;
+	private Set<String> openAccessJournals;
+	private Map<String, Integer> issn2pmcMonths;
+	private Map<String, EigenFactorData> issn2eigenfactordata;
+	private IndexWriter writer;
+	private Set<String> recentJournals = null;
+	private Set<String> medlineIndexedNlmIds = null;
+	private Set<String> medlineIndexedIssns = null;
+	private Map<String, String> issn2title;
+	private Map<String, List<String>> title2issn;
+	private Map<String, String> issn2issn;
+
 	public void index(JournalIndexerSettings settings) {
 		this.settings = settings;
 		loadValidPMIDs(settings.journals2PMIDsFile);
@@ -72,17 +72,13 @@ public class JournalIndexer {
 			writer = new IndexWriter(d, analyzer, true, MaxFieldLength.UNLIMITED);
 			writer.setMaxBufferedDocs(1000);
 			writer.setMergeFactor(100);
-			
+
 			// Initialize Medline iterator:
-			RetrieveSettings retrieveSettings = MedlineTools.defaultSettings;
-			retrieveSettings.retrieveCitationInformation = true;
-			retrieveSettings.retrievePublicatonTypes = true;
-			retrieveSettings.retrieveAuthors = true;
-			retrieveSettings.retrieveLanguage = true;
-			retrieveSettings.retrieveText = true;
+			RetrieveSettings retrieveSettings = new RetrieveSettings();
 			retrieveSettings.pmidsFile = settings.tempFolder + "PMIDsToBeIndexed.txt";
+			retrieveSettings.pathToSqlite = "E:/Medline/PubMed.sqlite";
 			MedlineCitationIterator iterator = new MedlineCitationIterator(retrieveSettings);
-			
+
 			// Iterate over Medline records:
 			System.out.println(StringUtilities.now() + "\tCreating index");
 			outfile = new WriteTextFile(settings.tempFolder + "log.txt");
@@ -101,13 +97,13 @@ public class JournalIndexer {
 			e.printStackTrace();
 		}
 	}
-	
+
 	private void loadMedlineIndexedJournalsFile() {
 		medlineIndexedNlmIds = new HashSet<String>();
 		for (String line : new ReadTextFile(settings.medlineIndexJournalsFile))
 			medlineIndexedNlmIds.add(line);
 	}
-	
+
 	private static Set<String> getIgnorePubTypes() {
 		Set<String> types = new HashSet<String>();
 		types.add("Comment");
@@ -142,7 +138,7 @@ public class JournalIndexer {
 		types.add("Government Publications");
 		return types;
 	}
-	
+
 	private void loadJournalsFile() {
 		issn2title = new HashMap<String, String>();
 		issn2issn = new HashMap<String, String>();
@@ -174,7 +170,7 @@ public class JournalIndexer {
 						issns.add(issn);
 						if (issns.size() > 2)
 							System.err.println("Duplicate normalized journal name " + normName + " for " + fullTitle);
-						
+
 						if (firstISSN == null)
 							firstISSN = issn;
 						else {
@@ -197,66 +193,70 @@ public class JournalIndexer {
 			}
 		}
 	}
-	
+
 	private String normalizeName(String name) {
 		String temp = StringUtilities.removeParenthesisAndContent(name.toLowerCase()).trim();
 		return temp.substring(0, Math.min(70, temp.length()));
 	}
-	
+
 	private void loadOpenAccessJournals() {
 		openAccessJournals = new HashSet<String>();
 		ReadCSVFileWithHeader oa = new ReadCSVFileWithHeader(settings.openAccesFile);
 		int count = 0;
-		for (Row row : oa){
+		for (Row row : oa) {
 			openAccessJournals.add(row.get("Journal ISSN (print version)"));
 			openAccessJournals.add(row.get("Journal EISSN (online version)"));
-			count++;		
+			count++;
 		}
 		System.out.println("Number of open access journals: " + count);
 	}
-	
+
 	private void loadPMCJournals() {
-		issn2pmcMonths = new HashMap<String, Integer>();
+			issn2pmcMonths = new HashMap<String, Integer>();
 		ReadCSVFile pmc = new ReadCSVFile(settings.pmcFile);
 		boolean first = true;
 		int pISSNcol = -1;
 		int eISSNcol = -1;
 		int delayCol = -1;
-		
+
 		for (List<String> cols : pmc)
 			if (cols.size() > 1) {
 				if (first) {
 					first = false;
-					pISSNcol = cols.indexOf("pISSN");
+					pISSNcol = cols.indexOf("ISSN (print)");
 					if (pISSNcol == -1)
 						System.err.println("Column not found!");
-					eISSNcol = cols.indexOf("eISSN");
+					eISSNcol = cols.indexOf("ISSN (online)");
 					if (eISSNcol == -1)
 						System.err.println("Column not found!");
-					delayCol = cols.indexOf("Free access");
+					delayCol = cols.indexOf("Release Delay (Embargo)");
 					if (delayCol == -1)
 						System.err.println("Column not found!");
-					
+
 				} else { // not first
+					// Some lines can be malformed. Just skip:
+					if (cols.size() <= delayCol) 
+						continue;
+
 					String issn = cols.get(pISSNcol);
 					String essn = cols.get(eISSNcol);
-					
 					String text = cols.get(delayCol);
 					Integer delay = null;
 					if (text.contains("Immediate"))
 						delay = 0;
-					else if (text.equals("")){
+					else if (text.equals("")) {
 						System.out.println("No duration til open access for journal with ISSN: " + issn);
 					} else {
 						int io = text.indexOf(" month");
 						if (io == -1)
 							System.err.println("Illegal duration in PMC file: " + text);
 						else {
-							String months = text.substring(0, io);// StringUtilities.findBetween(text, "After ", " month");	
+							String months = text.substring(0, io);// StringUtilities.findBetween(text, "After ", "
+																	// month");
 							delay = Integer.parseInt(months);
 						}
 					}
-					
+
 					if (delay != null) {
 						issn2pmcMonths.put(issn, delay);
 						issn2pmcMonths.put(essn, delay);
@@ -265,7 +265,7 @@ public class JournalIndexer {
 			}
 		System.out.println("Number of pmc journals: " + issn2pmcMonths.size());
 	}
-	
+
 	private void loadEigenFactorData() {
 		issn2eigenfactordata = new HashMap<String, EigenFactorData>();
 		List<Float> ais = new ArrayList<Float>();
@@ -275,7 +275,7 @@ public class JournalIndexer {
 //		int fullname = -1;
 		int abbr = -1;
 		int influence = -1;
-		
+
 		for (String line : eigenFactor)
 			if (!line.equals("")) {
 				List<String> cols = StringUtilities.safeSplit(line, '\t');
@@ -300,7 +300,7 @@ public class JournalIndexer {
 					float ai;
 					if (aiString.startsWith("<"))
 						ai = 0;
-					else 
+					else
 						ai = Float.parseFloat(aiString);
 					if (ai != -1) {
 						EigenFactorData data = new EigenFactorData();
@@ -310,7 +310,7 @@ public class JournalIndexer {
 						data.influenceString = aiString;
 						ais.add(ai);
 						issn2eigenfactordata.put(issnString, data);
-						
+
 //						List<String> issns = title2issn.get(normalizeName(fullnameString));
 //						if (issns != null && !issns.contains(issnString)) {
 //							System.out
@@ -323,7 +323,7 @@ public class JournalIndexer {
 					}
 				}
 			}
-		
+
 		Collections.sort(ais);
 		for (EigenFactorData data : issn2eigenfactordata.values()) {
 			int rank = Collections.binarySearch(ais, data.influence);
@@ -336,15 +336,15 @@ public class JournalIndexer {
 		defaultData.shortName = "";
 		defaultData.rank = "";
 	}
-	
+
 	private class EigenFactorData {
-		float	influence;
+		float influence;
 		String influenceString;
-		String	shortName;
-		String	issn;
-		String	rank;
+		String shortName;
+		String issn;
+		String rank;
 	}
-	
+
 	private void loadRecentJournals() {
 		recentJournals = new HashSet<String>();
 		ReadTextFile file = new ReadTextFile(settings.recentJournalsFile);
@@ -352,11 +352,11 @@ public class JournalIndexer {
 			recentJournals.add(line.split("\t")[0]);
 		}
 	}
-	
+
 	private void loadValidPMIDs(String journals2PMIDsFile) {
 		System.out.println(StringUtilities.now() + "\tLoading PMIDs");
 		List<Integer> result = new ArrayList<Integer>();
-		
+
 		ReadTextFile trainingfile = new ReadTextFile(journals2PMIDsFile);
 		for (String line : trainingfile) {
 			String[] cols = line.split("\t");
@@ -376,17 +376,20 @@ public class JournalIndexer {
 			pmidFile.writeln(pmid.toString());
 		pmidFile.close();
 	}
-	
+
 	private Document createDocument(MedlineCitation citation) {
 		outfile.writeln("Processing pmid " + citation.pmid);
 		outfile.flush();
-		
+
 		String issnAlt = issn2issn.get(citation.journal.issn);
 		String issnLinkingAlt = issn2issn.get(citation.journal.issnLinking);
-		
+
 		Document document = new Document();
+		if (citation.title == null)
+			System.out.println("asdf");
 		document.add(new Field("title", citation.title, Field.Store.YES, Field.Index.NO));
-		document.add(new Field("text", citation.title + "\n" + citation.getConcatenatedAbstract(), Field.Store.NO, Field.Index.ANALYZED));
+		document.add(
+				new Field("text", citation.title + "\n" + citation.abstractText, Field.Store.NO, Field.Index.ANALYZED));
 		String journal = issn2title.get(citation.journal.issn);
 		if (journal == null) {
 			journal = citation.journal.title;
@@ -400,23 +403,25 @@ public class JournalIndexer {
 		// Remove duplicate authors:
 		Set<String> authorSet = new HashSet<String>();
 		List<String> uniqueAuthors = new ArrayList<String>();
-		for (Author author : citation.authors) {
-			if (authorSet.add(authorToString(author)))
-				uniqueAuthors.add(authorToString(author));
+		for (String author : citation.authors) {
+			if (authorSet.add(author))
+				uniqueAuthors.add(author);
 		}
 		String authorString = StringUtilities.join(uniqueAuthors, "\n");
 		document.add(new Field("authors", authorString, Field.Store.YES, Field.Index.ANALYZED));
-		document.add(new Field("language", citation.languages.size() == 0 ? "" : citation.languages.get(0), Field.Store.NO, Field.Index.NOT_ANALYZED));
-		
+		document.add(new Field("language", citation.language, Field.Store.NO, Field.Index.NOT_ANALYZED));
+
 		String recent = recentJournals.contains(citation.journal.medlineTA) ? "true" : "false";
 		document.add(new Field("recent", recent, Field.Store.NO, Field.Index.NOT_ANALYZED));
-		
-		String openaccess = openAccessJournals.contains(citation.journal.issn) || (issnAlt != null && openAccessJournals.contains(issnAlt)) ? "true" : "false";
+
+		String openaccess = openAccessJournals.contains(citation.journal.issn)
+				|| (issnAlt != null && openAccessJournals.contains(issnAlt)) ? "true" : "false";
 		document.add(new Field("openaccess", openaccess, Field.Store.YES, Field.Index.NOT_ANALYZED));
-		
-		String medlineIndexed = medlineIndexedIssns.contains(citation.journal.issn) || (issnAlt != null && medlineIndexedIssns.contains(issnAlt)) ? "true" : "false";
+
+		String medlineIndexed = medlineIndexedIssns.contains(citation.journal.issn)
+				|| (issnAlt != null && medlineIndexedIssns.contains(issnAlt)) ? "true" : "false";
 		document.add(new Field("medlineindexed", medlineIndexed, Field.Store.YES, Field.Index.NOT_ANALYZED));
-		
+
 		Integer pmcMonths = issn2pmcMonths.get(citation.journal.issn);
 		if (pmcMonths == null && issnAlt != null)
 			pmcMonths = issn2pmcMonths.get(issnAlt);
@@ -427,24 +432,27 @@ public class JournalIndexer {
 		if (pmcMonths == null)
 			pmcMonths = -1;
 		document.add(new Field("pmcmonths", pmcMonths.toString(), Field.Store.YES, Field.Index.NOT_ANALYZED));
-		
+
 		calendar.setTime(citation.publicationDate);
 		Integer year = calendar.get(Calendar.YEAR);
 		document.add(new Field("year", year.toString(), Field.Store.YES, Field.Index.NO));
 		String email = "";
 		String emailAuthor = "";
-		for (Author author : citation.authors) {
-			email = MedlineCitationTools.extractEMailFromAffiliation(author.affiliation);
-			if (email != null) {
-				emailAuthor = authorToString(author);
+		for (int i = 0; i < citation.affiliations.length; i++) {
+			String affiliation = citation.affiliations[i];
+			if (affiliation.length() != 0) {
+				String author = citation.authors[i];
+				String tempEmail = MedlineCitationTools.extractEMailFromAffiliation(affiliation);
+				if (tempEmail != null) {
+					email = tempEmail;
+					emailAuthor = author;
+				}
 				break;
 			}
 		}
-		if (email == null)
-			email = "";
 		document.add(new Field("email", email, Field.Store.YES, Field.Index.NO));
 		document.add(new Field("emailauthor", emailAuthor, Field.Store.NO, Field.Index.ANALYZED));
-		
+
 		EigenFactorData data = issn2eigenfactordata.get(citation.journal.issn);
 		if (data == null && issnAlt != null)
 			data = issn2eigenfactordata.get(issnAlt);
@@ -452,13 +460,13 @@ public class JournalIndexer {
 			data = issn2eigenfactordata.get(citation.journal.issnLinking);
 		if (data == null && issnLinkingAlt != null)
 			data = issn2eigenfactordata.get(issnLinkingAlt);
-		
+
 		String storeIssn = citation.journal.issn;
 		if (data == null)
 			data = defaultData;
 		else
 			storeIssn = data.issn;
-		
+
 		if (storeIssn == null)
 			storeIssn = "";
 		document.add(new Field("issn", storeIssn, Field.Store.YES, Field.Index.NO));
@@ -467,20 +475,13 @@ public class JournalIndexer {
 		document.add(new Field("ai", data.influenceString, Field.Store.YES, Field.Index.NO));
 		return document;
 	}
-	
-	private String authorToString(Author author) {
-		if (author.collectiveName != null)
-			return author.collectiveName;
-		else
-			return author.lastname + (author.initials == null ? "" : " " + author.initials);
-	}
-	
+
 	private void processMedlineCitation(MedlineCitation citation) {
 		medlineCount++;
 		if (medlineCount % 10000 == 0)
 			System.out.println(medlineCount);
-		
-		if (citation.getConcatenatedAbstract() != null && citation.getConcatenatedAbstract().length() != 0 && legalPubType(citation)) {
+
+		if (citation.abstractText.length() != 0 && legalPubType(citation)) {
 			Document document = createDocument(citation);
 			try {
 				writer.addDocument(document);
@@ -492,7 +493,7 @@ public class JournalIndexer {
 			}
 		}
 	}
-	
+
 	private boolean legalPubType(MedlineCitation citation) {
 		for (String pubType : citation.publicationTypes)
 			if (ignorePubTypes.contains(pubType))
