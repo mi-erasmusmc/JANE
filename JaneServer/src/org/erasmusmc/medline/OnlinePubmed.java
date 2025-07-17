@@ -293,8 +293,9 @@ public class OnlinePubmed {
 	}
 	
 	private static String convertStreamToString(InputStream inputStream) {
-		Scanner scanner = extract(inputStream).useDelimiter("\\A");
-		return scanner.hasNext() ? scanner.next() : "";
+		try (Scanner scanner = extract(inputStream).useDelimiter("\\A")) {
+			return scanner.hasNext() ? scanner.next() : "";
+		}
 	}
 	
 	private static Scanner extract(InputStream inputStream) {
