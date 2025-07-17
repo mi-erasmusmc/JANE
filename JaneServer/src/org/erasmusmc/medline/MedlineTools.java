@@ -55,28 +55,33 @@ public class MedlineTools {
 		}
 	}
 	
-	public static void main(String[] args) throws Exception {
-//		Calendar oneYearAgo = new GregorianCalendar();
-//		oneYearAgo.add(Calendar.YEAR, -40);
-//		
-//		Calendar future = new GregorianCalendar();
-//		future.add(Calendar.YEAR, 10);
-//		
-//		MedlineTools medlineTools = new MedlineTools("E:/Medline/PubMed.sqlite");
-//		medlineTools.savePMIDsInTimeRange("E:/Medline/test.txt", oneYearAgo.getTime(), future.getTime());
-		Class.forName("org.sqlite.JDBC");
-		Connection connection = DriverManager.getConnection("jdbc:sqlite:" + "E:/Medline/PubMed.sqlite");
-		String sql = "SELECT * FROM pubmed_articles WHERE pmid = 32132887;";
-		Statement statement = connection.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
-		ResultSet resultSet = statement.executeQuery(sql);
-		while (resultSet.next()) {
-			System.out.println(resultSet.getString("file_number"));
-		}
-		connection.close();
+	public static void main(String[] args) {
+		Calendar oneYearAgo = new GregorianCalendar();
+		oneYearAgo.add(Calendar.YEAR, -40);
+		
+		Calendar future = new GregorianCalendar();
+		future.add(Calendar.YEAR, 10);
+		
+		MedlineTools medlineTools = new MedlineTools("E:/Medline/PubMed.sqlite");
+		medlineTools.savePMIDsInTimeRange("E:/Medline/test.txt", oneYearAgo.getTime(), future.getTime());
 	}
+		
+//	public static void main(String[] args) throws Exception {
+//		Class.forName("org.sqlite.JDBC");
+//		Connection connection = DriverManager.getConnection("jdbc:sqlite:" + "E:/Medline/PubMed.sqlite");
+//		String sql = "SELECT * FROM pubmed_articles WHERE pmid = 32132887;";
+//		Statement statement = connection.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+//		ResultSet resultSet = statement.executeQuery(sql);
+//		while (resultSet.next()) {
+//			System.out.println(resultSet.getString("file_number"));
+//		}
+//		connection.close();
+//	}
 
 	public void savePMIDsInTimeRange(String filename, Date start, Date end) {
 		try {
+			assurePublicationDataIsIndexed();
+			
 			String sql = "SELECT pmid FROM pubmed_articles WHERE publication_date >= " + format(start)
 					+ " AND publication_date <= " + format(end) + " ORDER BY pmid";
 			Statement statement = connection.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
@@ -91,8 +96,24 @@ public class MedlineTools {
 			System.out.println("Found " + count + " PMIDs published between " + format.format(start) + " and "
 					+ format.format(end));
 			out.close();
+			statement.close();
 		} catch (SQLException e) {
 			e.printStackTrace();
+		}
+	}
+
+	private void assurePublicationDataIsIndexed() throws SQLException {
+		String sql = "SELECT * FROM sqlite_master WHERE type= 'index' and tbl_name = 'pubmed_articles' and name = 'pub_date_idx';";
+		Statement statement = connection.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+		ResultSet resultSet = statement.executeQuery(sql);
+		boolean hasIndex = resultSet.next();
+		statement.close();
+		if (!hasIndex) {
+			System.out.println("No index on publication date found. Creating new index");
+			sql = "CREATE INDEX pub_date_idx ON pubmed_articles (publication_date);";
+			statement = connection.createStatement();
+			statement.execute(sql);
+			System.out.println("Finished creating new index");
 		}
 	}
 

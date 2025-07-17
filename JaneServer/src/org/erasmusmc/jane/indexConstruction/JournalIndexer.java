@@ -385,8 +385,6 @@ public class JournalIndexer {
 		String issnLinkingAlt = issn2issn.get(citation.journal.issnLinking);
 
 		Document document = new Document();
-		if (citation.title == null)
-			System.out.println("asdf");
 		document.add(new Field("title", citation.title, Field.Store.YES, Field.Index.NO));
 		document.add(
 				new Field("text", citation.title + "\n" + citation.abstractText, Field.Store.NO, Field.Index.ANALYZED));
