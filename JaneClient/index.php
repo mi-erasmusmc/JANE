@@ -1,4 +1,4 @@
-<html>
+<html lang="en">
 <head>
 <title>Journal / Author Name Estimator</title>
 <style type="text/css" media="screen">
@@ -32,7 +32,7 @@ function showExtra(){
 
 //-->
     </script>
-<div id="pagewrapper">
+<div id="pagewrapper" role="none">
 <div id="header">
 <h1>Journal / Author Name Estimator</h1>
 </div>
@@ -40,18 +40,18 @@ function showExtra(){
 <p>&nbsp;</p>
 <?php
 if (isset($_GET["structured"])) {
-  print("Enter your query here: <div id=\"gray\">(or, click <a href=\"index.php\">here</a> to search using title and/or abstract)</div>\n");
+  print("<label for=\"queryField\">Enter your query here:</label> <div id=\"gray\">(or, click <a href=\"index.php\">here</a> to search using title and/or abstract)</div>\n");
 } else {
-  print("Insert your title and/or abstract here: <div id=\"gray\">(or, click <a href=\"index.php?structured=true\">here</a> to search using keywords)</div>\n");
+  print("<label for=\"abstractArea\">Insert your title and/or abstract here:</label> <div id=\"gray\">(or, click <a href=\"index.php?structured=true\">here</a> to search using keywords)</div>\n");
 }
 ?>
 <form name='form' action="suggestions.php" method="post"><?php
 if (isset($_GET["structured"])) {
-  print("<input type=\"text\" name=\"text\" size=\"80\"/><br>\n");
+  print("<input type=\"text\" name=\"text\" size=\"80\" id=\"queryField\"/><br>\n");
   print("<input type=\"hidden\" name=\"structured\" value=\"true\">\n");
   print("<div id=\"gray\">For example: (malaria OR tuberculosis) AND \"vaccine development\"</div><br>\n");
 } else {
-  print("<textarea name=\"text\" rows=\"20\" cols=\"80\">");
+  print("<textarea name=\"text\" rows=\"20\" cols=\"80\" id=\"abstractArea\">");
   if (isset($_GET["text"]))
     print($_GET["text"]);
   print("</textarea><br>\n");
@@ -164,8 +164,8 @@ keyword search, similar to popular web search engines. Click <a
 <p>JANE relies on the data in PubMed, which can contain papers from predatory journals, and therefore these journals can appear in JANE's results. To help identify high-quality journals, JANE now tags journals that are currently indexed in MEDLINE, and open access journals approved by the Directory of Open Access Journals (DOAJ).</p>
 <p align="right"><a href="faq.php">Additional information about Jane</a></p>
 </div>
-<div id="footer">Copyright 2007, <a href="http://biosemantics.org/index.php">The
-Biosemantics Group</a>. Research funded by <a href="http://www.nbic.nl">NBIC</a>.
+<div id="footer">Copyright 2007, <a href="https://biosemantics.org/index.php">The
+Biosemantics Group</a>. Research funded by <a href="https://www.nbic.nl">NBIC</a>.
 Created and maintained by <script language=javascript>
 	  <!--
 	    var username = "schuemie";
@@ -173,7 +173,7 @@ Created and maintained by <script language=javascript>
 	    document.write("<a href=" + "mail" + "to:" + username + "@" + hostname + ">Martijn Schuemie</a>.")
 	  //-->
 	</script>
-<noscript>Martijn Schuemie.</noscript> <br/>Hosting provided by the <a href="http://ohdsi.org">Observational Health Data Science and Informatics</a>
+<noscript>Martijn Schuemie.</noscript> <br/>Hosting provided by the <a href="https://ohdsi.org">Observational Health Data Science and Informatics</a>
 </div>
 </div>
 </body>

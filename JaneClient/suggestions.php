@@ -1,6 +1,6 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+	"https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="https://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 
@@ -43,7 +43,7 @@
 	}
 
 	function popUp(URL) {
-	  window.open("http://eigenfactor.org/"+URL, 'detail', 'toolbar=0,scrollbars=0,location=0,statusbar=0,menubar=0,resizable=1,width=825,height=750');
+	  window.open("https://eigenfactor.org/"+URL, 'detail', 'toolbar=0,scrollbars=0,location=0,statusbar=0,menubar=0,resizable=1,width=825,height=750');
 	}
 
 	if (top.location!= self.location) {
@@ -119,8 +119,8 @@ else {
   $client->printSuggestions();
 }
 ?>
-<div id="footer">Copyright 2007, <a href="http://biosemantics.org/index.php">The
-Biosemantics Group</a>. Research funded by <a href="http://www.nbic.nl">NBIC</a>.
+<div id="footer">Copyright 2007, <a href="https://biosemantics.org/index.php">The
+Biosemantics Group</a>. Research funded by <a href="https://www.nbic.nl">NBIC</a>.
 Created and maintained by <script language=javascript>
 	  <!--
 	    var username = "schuemie";
@@ -128,7 +128,7 @@ Created and maintained by <script language=javascript>
 	    document.write("<a href=" + "mail" + "to:" + username + "@" + hostname + ">Martijn Schuemie</a>.")
 	  //-->
 	</script>
-<noscript>Martijn Schuemie.</noscript> <br/>Hosting provided by the <a href="http://ohdsi.org">Observational Health Data Science and Informatics</a>
+<noscript>Martijn Schuemie.</noscript> <br/>Hosting provided by the <a href="https://ohdsi.org">Observational Health Data Science and Informatics</a>
 </div>
 </div>
 </body>

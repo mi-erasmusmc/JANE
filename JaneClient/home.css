@@ -125,13 +125,13 @@ th {
 }
 
 h2 {
-	color: #FFAB08; 
-	font-size: 2em; 
+	color: #F3790F;
+	font-size: 2em;
 	text-align: left; 
 /* some air around the text */
 	padding-bottom: 1px;
 /* set borders around header */
-	border-bottom: 1px solid #FFAB08; 
+	border-bottom: 1px solid #F3790F; 
       line-height: 1.5em;
 /* and some air under the border */
       margin: 0 0 0.5em 0;
@@ -226,12 +226,12 @@ we need to assign a height for it so that the image wont cut off
   padding-top: 16px;
   clear: both;
   text-align: center;
-  color: #999999;
+  color: #777777;
 }
 
 #gray {
   display: inline;
-  color: #999999;
+  color: #777777;
 }
 
 form {

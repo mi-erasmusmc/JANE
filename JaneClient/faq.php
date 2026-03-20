@@ -20,6 +20,7 @@ Journal / Author Name Estimator
 	<li><a href="#whichjournals">Which journals are included in Jane?</a></li>
 	<li><a href="#whichauthors">Which authors are included in Jane?</a></li>
 	<li><a href="#whichpapers">Which papers are included in Jane?</a></li>
+	<li><a href="#predatory">Could JANE recommend predatory journals?</a></li>
 	<li><a href="#article influence">What is the Article Influence score?</a></li>
 	<li><a href="#api">I would like to include Jane in my application. Is
 	it possible to access Jane programmatically?</a></li>
@@ -49,10 +50,10 @@ article and your input is calculated. The similarity scores of all the
 articles belonging to a certain journal or author are summed to
 calculate the confidence score for that journal or author. The results
 are ranked by confidence score. For more information, you can read <a
-	href="http://www.ncbi.nlm.nih.gov/pubmed/18227119?ordinalpos=2&itool=EntrezSystem2.PEntrez.Pubmed.Pubmed_ResultsPanel.Pubmed_RVDocSum">
+	href="https://www.ncbi.nlm.nih.gov/pubmed/18227119?ordinalpos=2&itool=EntrezSystem2.PEntrez.Pubmed.Pubmed_ResultsPanel.Pubmed_RVDocSum">
 our paper</a>.</p>
 <p>* For the computer geeks: we use the open source search engine <a
-	href="http://lucene.apache.org">Lucene</a>. Queries using keywords are
+	href="https://lucene.apache.org">Lucene</a>. Queries using keywords are
 parsed with the QueryParser class, titles and abstracts are parsed using
 the MoreLikeThis parser class. <a name="updates"></a>
 
@@ -64,6 +65,9 @@ the MoreLikeThis parser class. <a name="updates"></a>
 <p>Basically, all journals included in PubMed are included in Jane.
 However, in order to show only active journals, we do not show journals
 for which no entry was found in PubMed in the last year. </p>
+<a name="predatory"></a>
+<h3>Could JANE recommend predatory journals?</h3>
+<p>JANE relies on the data in PubMed, which can contain papers from predatory journals, and therefore these journals can appear in JANE's results. To help identify high-quality journals, JANE now tags journals that are currently indexed in MEDLINE, and open access journals approved by the Directory of Open Access Journals (DOAJ).</p>
 <a name="whichauthors"></a>
 <h3>Which authors are included in Jane?</h3>
 <p>All authors that have published one or more articles in the last 10
@@ -93,7 +97,7 @@ citations are weighted based the influence of the journals from which
 citations are received: being cited in an article in Science can boost a
 journal's AI more than being cited in an article in an obscure journal.
 For more detailed information, see the <a
-	href="http://www.eigenfactor.org/whyeigenfactor.htm">eigenfactor.org</a>
+	href="https://www.eigenfactor.org/whyeigenfactor.htm">eigenfactor.org</a>
 website.</p>
 <a name="api"></a>
 <h3>I would like to include Jane in my application. Is it possible to
@@ -113,8 +117,8 @@ regarding Jane, you can always send an e-mail to <script
 <p><a href="index.php">Return to Jane</a></p>
 
 
-<div id="footer">Copyright 2007, <a href="http://biosemantics.org/index.php">The
-Biosemantics Group</a>. Research funded by <a href="http://www.nbic.nl">NBIC</a>.
+<div id="footer">Copyright 2007, <a href="https://biosemantics.org/index.php">The
+Biosemantics Group</a>. Research funded by <a href="https://www.nbic.nl">NBIC</a>.
 Created and maintained by <script language=javascript>
 	  <!--
 	    var username = "schuemie";
@@ -122,7 +126,7 @@ Created and maintained by <script language=javascript>
 	    document.write("<a href=" + "mail" + "to:" + username + "@" + hostname + ">Martijn Schuemie</a>.")
 	  //-->
 	</script>
-<noscript>Martijn Schuemie.</noscript> <br/>Hosting provided by the <a href="http://ohdsi.org">Observational Health Data Science and Informatics</a>
+<noscript>Martijn Schuemie.</noscript> <br/>Hosting provided by the <a href="https://ohdsi.org">Observational Health Data Science and Informatics</a>
 </div>
 </body>
 </html>
