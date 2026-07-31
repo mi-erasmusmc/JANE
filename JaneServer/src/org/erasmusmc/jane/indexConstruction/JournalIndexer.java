@@ -411,11 +411,15 @@ public class JournalIndexer {
 		document.add(new Field("recent", recent, Field.Store.NO, Field.Index.NOT_ANALYZED));
 
 		String openaccess = openAccessJournals.contains(citation.journal.issn)
-				|| (issnAlt != null && openAccessJournals.contains(issnAlt)) ? "true" : "false";
+				|| (issnAlt != null && openAccessJournals.contains(issnAlt))
+				|| (citation.journal.issnLinking != null && openAccessJournals.contains(citation.journal.issnLinking))
+				|| (issnLinkingAlt != null && openAccessJournals.contains(issnLinkingAlt))? "true" : "false";
 		document.add(new Field("openaccess", openaccess, Field.Store.YES, Field.Index.NOT_ANALYZED));
 
 		String medlineIndexed = medlineIndexedIssns.contains(citation.journal.issn)
-				|| (issnAlt != null && medlineIndexedIssns.contains(issnAlt)) ? "true" : "false";
+				|| (issnAlt != null && medlineIndexedIssns.contains(issnAlt))
+				|| (citation.journal.issnLinking != null && medlineIndexedIssns.contains(citation.journal.issnLinking))
+				|| (issnLinkingAlt != null && medlineIndexedIssns.contains(issnLinkingAlt))? "true" : "false";
 		document.add(new Field("medlineindexed", medlineIndexed, Field.Store.YES, Field.Index.NOT_ANALYZED));
 
 		Integer pmcMonths = issn2pmcMonths.get(citation.journal.issn);

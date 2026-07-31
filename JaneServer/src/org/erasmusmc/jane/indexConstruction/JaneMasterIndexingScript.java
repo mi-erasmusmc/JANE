@@ -41,6 +41,18 @@ public class JaneMasterIndexingScript {
 	// Did you remember to delete the old index folder?!
 
 	public static void main(String[] args) {
+		System.out.println(StringUtilities.now() + "\tFetching list of journals currently indexed in MEDLINE");
+		OnlinePubmed.saveIndexedJournalIds(tempFolder + "indexedJournals.txt", "schuemie@ohdsi.org");
+
+		System.out.println(StringUtilities.now() + "\tFetching doaj file");
+		downloadFile("https://doaj.org/csv", tempFolder + "doaj.csv");
+
+		System.out.println(StringUtilities.now() + "\tFetching PubMed Central file");
+		downloadFile("https://cdn.ncbi.nlm.nih.gov/pmc/home/jlist.csv", tempFolder + "jlist.csv");
+
+		System.out.println(StringUtilities.now() + "\tFetching Medline journals database");
+		downloadFileFTP("ftp.ncbi.nih.gov", "/pubmed/.J", "J_Medline.txt", tempFolder + "J_Medline.txt");
+
 		Calendar tenYearsAgo = new GregorianCalendar();
 		tenYearsAgo.add(Calendar.YEAR, -10);
 
@@ -61,18 +73,6 @@ public class JaneMasterIndexingScript {
 		PmidsToPmidsInJournal pmidsToPmidsInJournal = new PmidsToPmidsInJournal(pathToSql);
 		pmidsToPmidsInJournal.getJournalsToPmids(tempFolder + "Jane.PMIDs", tempFolder + "Jane_Journal2PMID.txt");
 		pmidsToPmidsInJournal.getJournalsToPmids(tempFolder + "Jane_Recent.PMIDs", tempFolder + "Jane_Journal2PMID_Recent.txt");
-
-		System.out.println(StringUtilities.now() + "\tFetching list of journals currently indexed in MEDLINE");
-		OnlinePubmed.saveIndexedJournalIds(tempFolder + "indexedJournals.txt", "schuemie@ohdsi.org");
-
-		System.out.println(StringUtilities.now() + "\tFetching doaj file");
-		downloadFile("https://doaj.org/csv", tempFolder + "doaj.csv");
-
-		System.out.println(StringUtilities.now() + "\tFetching PubMed Central file");
-		downloadFile("https://cdn.ncbi.nlm.nih.gov/pmc/home/jlist.csv", tempFolder + "jlist.csv");
-
-		System.out.println(StringUtilities.now() + "\tFetching Medline journals database");
-		downloadFileFTP("ftp.ncbi.nih.gov", "/pubmed/.J", "J_Medline.txt", tempFolder + "J_Medline.txt");
 
 		System.out.println(StringUtilities.now() + "\tIndexing articles");
 		JournalIndexerSettings settings = new JournalIndexerSettings();
