@@ -37,6 +37,14 @@ From `JaneSOAPServer.java`, `MedlineAnalyzer.java`, `JournalIndexer.java`:
   **No stemming.**
 - **MLT:** `maxQueryTerms = 25`, **`minTermFreq = 1`** (JANE explicitly overrides this — critical for a
   single pasted abstract), Lucene default doc-freq thresholds otherwise.
+- **MLT boost (`boost=false`):** legacy `initMLT` never calls `setBoost(true)`, so Lucene MoreLikeThis
+  used `tf*idf` **only to select** the top 25 terms, **not** to weight the query. Document ranking came
+  from DefaultSimilarity, which weights each selected term by **idf²** (query-weight idf × field-weight idf)
+  and is independent of the input term frequency. We reproduce this in `mlt.extract_terms`: select terms on
+  `tf*idf`, but return each term's **idf** (not `tf*idf`) as its boost, so BM25's own idf yields idf²-style
+  discrimination and a term repeated many times in the pasted text is not over-weighted. (Using `tf*idf` as
+  the boost — the original port — let frequently-repeated common words dominate and surfaced applied papers
+  instead of methods papers.)
 - **k = 50** similar papers feed the journal/author aggregation.
 - **Two different normalizations — don't conflate them:**
   1. per-result score: divide by max score if > 1 to keep `[0,1]` (in the old search path), then

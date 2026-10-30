@@ -20,9 +20,18 @@
     f.submit();
     f.action = save; f.target = target;
   }
-  function emailPopup(form) {
+  function emailAuthor(btn) {
     window.open('', 'email', 'height=300,width=450,scrollbars=yes');
-    form.target = 'email'; return true;
+    var f = document.createElement('form');
+    f.method = 'post'; f.action = '/email'; f.target = 'email';
+    var a = document.createElement('input');
+    a.type = 'hidden'; a.name = 'author'; a.value = btn.getAttribute('data-author');
+    var c = document.createElement('input');
+    c.type = 'hidden'; c.name = 'coauthors'; c.value = btn.getAttribute('data-coauthors');
+    f.appendChild(a); f.appendChild(c);
+    document.body.appendChild(f);
+    f.submit();
+    document.body.removeChild(f);
   }
 </script>
 {% endblock %}
@@ -104,11 +113,11 @@
       </td>
       {% if action == 'authors' %}
       <td>
-        <form name="emailform{{ loop.index0 }}" action="/email" method="post" onsubmit="return emailPopup(this)" style="display:inline">
-          <input type="hidden" name="author" value="{{ item.name }}" />
-          <input type="hidden" name="coauthors" value="{{ item.papers | map(attribute='authors') | sum(start=[]) | reject('equalto', item.name) | unique | join(';') }}" />
-          <input class="bigButton" value="E-mail" type="submit" title="Search for the e-mail address of {{ item.name }}" />
-        </form>
+        <input class="bigButton" type="button" value="E-mail"
+               title="Search for the e-mail address of {{ item.name }}"
+               data-author="{{ item.name }}"
+               data-coauthors="{{ item.papers | map(attribute='authors') | sum(start=[]) | reject('equalto', item.name) | unique | join(';') }}"
+               onclick="emailAuthor(this)" />
       </td>
       {% endif %}
       <td>

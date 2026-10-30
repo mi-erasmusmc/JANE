@@ -7,7 +7,19 @@ legacy JaneSOAPServer (minTermFreq=1, maxQueryTerms=25, Lucene default minDocFre
   * score each candidate term by input term-frequency * IDF, with IDF read directly from
     the Tantivy index statistics (searcher.doc_freq) using Lucene's DefaultSimilarity idf,
   * drop terms below minTermFreq or minDocFreq,
-  * keep the top maxQueryTerms terms, returned as (term, boost) for a weighted boolean OR.
+  * keep the top maxQueryTerms terms.
+
+Crucially, the legacy ``initMLT`` never calls ``setBoost(true)``, so Lucene MoreLikeThis ran
+with its default ``boost=false``: the input term-frequency * IDF score was used ONLY to
+*select* which terms enter the query, never to weight them. Document ranking then came
+entirely from Lucene's DefaultSimilarity, which weights every selected term by idf-squared
+(idf in the query weight times idf in the field weight) and ignores the input term
+frequency. We reproduce that here by selecting terms on tf*idf but returning each term's
+**IDF** (not tf*idf) as its query boost: combined with Tantivy's own BM25 idf this yields the
+legacy idf-squared discrimination, and — like legacy — a term repeated many times in the
+pasted text is NOT given extra weight (which previously let common words dominate the query).
+
+Returned as ``(term, boost)`` for a weighted boolean OR.
 """
 
 from __future__ import annotations
@@ -40,7 +52,10 @@ def extract_terms(
 ) -> list[tuple[str, float]]:
     """Return weighted query terms ``[(term, boost), ...]`` for the pasted abstract.
 
-    ``searcher`` is a Tantivy Searcher (provides ``doc_freq`` and ``num_docs``).
+    Terms are *selected* by input term-frequency * IDF (legacy Lucene MoreLikeThis), but the
+    returned ``boost`` is the term's IDF alone, mirroring legacy ``boost=false`` ranking (see
+    the module docstring). ``searcher`` is a Tantivy Searcher (provides ``doc_freq`` and
+    ``num_docs``).
     """
     tokens = normalize(text)
     if not tokens:
@@ -50,16 +65,17 @@ def extract_terms(
         return []
 
     term_freqs = Counter(tokens)
-    scored: list[tuple[str, float]] = []
+    scored: list[tuple[str, float, float]] = []
     for term, tf in term_freqs.items():
         if tf < min_term_freq:
             continue
         df = searcher.doc_freq(field, term)
         if df < min_doc_freq or df == 0:
             continue
-        score = tf * _idf(df, num_docs)
-        scored.append((term, score))
+        idf = _idf(df, num_docs)
+        # Select on tf*idf (legacy term selection); weight on idf alone (legacy boost=false).
+        scored.append((term, tf * idf, idf))
 
     # Highest-scoring terms first; break ties deterministically by term for stable queries.
     scored.sort(key=lambda t: (-t[1], t[0]))
-    return scored[:max_query_terms]
+    return [(term, idf) for term, _selection_score, idf in scored[:max_query_terms]]
