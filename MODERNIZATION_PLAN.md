@@ -13,7 +13,9 @@ aggregates them into **ranked journal suggestions** and **ranked author suggesti
 This signature behavior is preserved.
 
 ### Current architecture (as researched)
-- **Frontend:** PHP server-rendered pages (`JaneClient/`) + jQuery/jtip, talking to the backend over SOAP.
+> The old code now lives under `legacy/` (`legacy/JaneServer/` Java, `legacy/JaneClient/` PHP), kept for reference until cutover.
+
+- **Frontend:** PHP server-rendered pages (`legacy/JaneClient/`) + jQuery/jtip, talking to the backend over SOAP.
 - **Backend:** Java `JaneSOAPServer` (6 SOAP methods), Lucene 3.0.1 `MoreLikeThis` + filters,
   `IndexSearcherPool` (1 h refresh), `MedlineAnalyzer` (StandardAnalyzer + 4 stopwords).
 - **Ranking:** top-k = 50 similar papers → group by journal/author → sum scores → normalize to probabilities.
@@ -185,17 +187,17 @@ This signature behavior is preserved.
 
 ## 8. Key files to port or remove
 
-| Current file | Action |
-|--------------|--------|
-| `JaneServer/.../JaneSOAPServer.java` | Port kept endpoints, filter parsing, score normalization → `SearchService`. Drop `getPapers`. |
-| `JaneServer/.../MedlineAnalyzer.java` | Reproduce analyzer rules + feed the MLT term extractor. |
-| `JaneServer/.../IndexSearcherPool.java` | Replace with Tantivy open/reopen on symlink flip. |
-| `JaneServer/.../dataClasses/*.java` | Port data models; **drop `ai`/`airank`** from `Journal`. |
-| `JaneServer/.../indexConstruction/JournalIndexer.java` | Port fields + inclusion rules; **drop `loadEigenFactorData`**. |
-| `JaneServer/.../indexConstruction/JaneMasterIndexingScript.java` | Port to Stage 2 (keep SQLite source; drop Eigenfactor; add S3 packaging/upload). |
-| `JaneServer/.../medline/*` | Read existing `PubMed.sqlite` schema from Python. |
-| `JaneClient/JaneSuggestions.php` (AI bar), `articleinfluence.html` | **Remove Article Influence.** |
-| `JaneClient/*.php`, `faq.php` | Port to Jinja2; update FAQ (remove AI; keep monthly-update note). |
+| Legacy source (reference) | Action → new home |
+|---------------------------|-------------------|
+| `legacy/JaneServer/.../JaneSOAPServer.java` | Port kept endpoints, filter parsing, score normalization → `jane_core/search_service.py` + `jane_server/routes/api.py`. Drop `getPapers`. |
+| `legacy/JaneServer/.../MedlineAnalyzer.java` | Reproduce analyzer rules → `jane_core/text.py`; feed the MLT term extractor in `jane_core/mlt.py`. |
+| `legacy/JaneServer/.../IndexSearcherPool.java` | Replace with Tantivy open/reopen → `jane_server/index_manager.py`. |
+| `legacy/JaneServer/.../dataClasses/*.java` | Port data models → `jane_core/models.py`; **drop `ai`/`airank`** from `Journal`. |
+| `legacy/JaneServer/.../indexConstruction/JournalIndexer.java` | Port fields + inclusion rules → `jane_indexer/{build_index,inclusion}.py`; **drop `loadEigenFactorData`**. |
+| `legacy/JaneServer/.../indexConstruction/JaneMasterIndexingScript.java` | Port to Stage 2 → `jane_indexer/cli.py` (+ `package_upload.py`); keep SQLite source; drop Eigenfactor; add S3 packaging/upload. |
+| `legacy/JaneServer/.../medline/*` | Read existing `PubMed.sqlite` schema → `jane_indexer/sqlite_source.py`. |
+| `legacy/JaneClient/JaneSuggestions.php` (AI bar), `legacy/JaneClient/articleinfluence.html` | **Remove Article Influence** (nothing to port). |
+| `legacy/JaneClient/*.php`, `legacy/JaneClient/faq.php` | Port to Jinja2 → `jane_server/routes/web.py` + `jane_server/templates/`; update FAQ (remove AI; keep monthly-update note). |
 
 ---
 
@@ -204,3 +206,50 @@ This signature behavior is preserved.
 - **Stage 1 incremental SQLite building** is already implemented and maintained separately.
 - **Deployment specifics** (systemd vs. container, S3 bucket/IAM details) pending confirmation with the server maintainer.
 - No embeddings / LLM inference in the core search (keyword/BM25 only).
+
+---
+
+## 10. Repository layout (scaffolding in place)
+
+The repo is a **uv workspace** with three packages under `packages/`. Shared `jane_core` is a
+path dependency of both the indexer and the server, so index-time and query-time tokenization
+share one implementation (guards the #1 risk in IMPLEMENTATION_NOTES.md §0).
+
+```
+packages/
+  jane_core/     # shared: text (analyzer), schema, mlt, search_service, filters, models
+  jane_indexer/  # heavy box (Stage 2): sqlite_source, journal_metadata, inclusion,
+                 #   build_index, package_upload, cli   (console script: `jane-index`)
+  jane_server/   # light box: app, config, index_manager, routes/{web,api,admin},
+                 #   mcp/server, templates/, static/
+deploy/
+  server/        # jane-server.service, Caddyfile, pull-index.sh, jane-index-pull.{service,timer}, jane.env.example
+  indexer/       # jane-indexer.{service,timer}, jane-indexer.env.example
+tests/parity/    # harness.py + baselines/ (capture old-JANE output BEFORE decommissioning)
+legacy/          # old JaneServer (Java) + JaneClient (PHP), reference until cutover
+```
+
+All stubs currently `raise NotImplementedError` with TODOs pointing back to this plan and
+IMPLEMENTATION_NOTES.md. Constants already captured in code: `STOPWORDS`, `MAX_QUERY_TERMS = 25`,
+`MIN_TERM_FREQ = 1`, `TOP_K = 50`, `MAX_RESULT_SIZE = 100`, `MIN_PMIDS_PER_JOURNAL = 20`.
+
+**Phase → where to implement**
+
+| Phase | Files |
+|-------|-------|
+| 1 Core search | `jane_core/{text,schema,mlt,search_service,filters,models}.py` |
+| 2 Indexer | `jane_indexer/{sqlite_source,journal_metadata,inclusion,build_index,package_upload,cli}.py` |
+| 3 REST API | `jane_server/routes/api.py`, `jane_server/app.py`, `jane_core/models.py` |
+| 4 MCP | `jane_server/mcp/server.py` |
+| 5 Frontend | `jane_server/routes/web.py`, `jane_server/templates/`, `jane_server/static/` |
+| 6 Deploy | `deploy/server/`, `deploy/indexer/` |
+| 7 Parity | `tests/parity/harness.py` |
+
+**Developer setup**
+
+- `uv sync` — create/populate the venv (Python 3.12; Homebrew interpreter on the dev MacBook).
+- `uv run pytest` — run tests (scaffold tests are skipped until implemented).
+- Per-target installs: `uv sync --package jane-server` / `uv sync --package jane-indexer`.
+- `PubMed.sqlite` sits at the repo root (gitignored) for indexer development.
+- **First implementation target:** `jane_core.text.normalize` (analyzer parity), guarded by
+  `packages/jane_core/tests/test_text.py`.

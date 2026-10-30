@@ -4,6 +4,9 @@ Companion to [MODERNIZATION_PLAN.md](MODERNIZATION_PLAN.md). The plan says *what
 this file captures *gotchas, exact constants, and risks* gathered from the existing codebase so an
 implementing agent doesn't rediscover them the hard way. **Verify against source before relying on a value.**
 
+> The old code referenced below by bare filename (e.g. `MedlineAnalyzer.java`, `JaneSuggestions.php`) now
+> lives under `legacy/` — Java under `legacy/JaneServer/`, PHP under `legacy/JaneClient/`.
+
 ---
 
 ## 0. Do this first (highest-risk unknowns to de-risk early)
