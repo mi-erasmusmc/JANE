@@ -65,15 +65,18 @@ and `subset=` (**subset is being dropped**).
 
 - **DOAJ (open access):** `https://doaj.org/csv`
 - **PMC jlist (`pmcmonths` / deposit delay):** `https://cdn.ncbi.nlm.nih.gov/pmc/home/jlist.csv`
-- **Medline-indexed journal IDs:** NCBI E-utilities (see `OnlinePubmed.java`).
-- **Journal name/abbrev/ISSN:** `J_Medline.txt` via FTP `ftp.ncbi.nih.gov/pubmed/.J`.
-- **NIHPA:** flag derived during indexing.
-- Join is **by ISSN**, with fallbacks to linking/alternative ISSNs (see `JournalIndexer.createDocument`).
+- **Medline-indexed ISSNs:** NLM's `J_Medline.txt` (`https://ftp.ncbi.nlm.nih.gov/pubmed/J_Medline.txt`)
+  — a single bulk-file download listing every MEDLINE journal's ISSNs. (The legacy code also hit
+  the NCBI E-utilities `nlmcatalog` API for this; the modern indexer uses only the file.)
+- **NIHPA:** no upstream source; defaults False.
+- Journal name/abbrev/ISSN come straight from the SQLite, so a separate journal-database file is
+  not needed beyond the ISSN list above.
+- Join is **by ISSN**, with a fallback to the linking ISSN.
 - **Eigenfactor file is removed** — delete `loadEigenFactorData` and its CSV dependency entirely.
 
 ### NCBI usage policy
-`OnlinePubmed` used ~500 ms between requests, `maxAttempts = 10`. Modern NCBI E-utilities expects an
-**API key** for >3 req/s and enforces usage policies — wire in an API key + polite rate limiting.
+Every metadata source is now a single bulk-file download (DOAJ, PMC jlist, `J_Medline.txt`), so
+there are **no paged API calls and no NCBI API key** required — just outbound HTTPS.
 
 ## 5. Existing SQLite (read-only dependency; Stage 1 is out of scope)
 

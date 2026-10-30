@@ -52,7 +52,6 @@ def client(tmp_path, monkeypatch):
     monkeypatch.setenv("JANE_INDEX_PATH", str(idx_dir))
     monkeypatch.setenv("JANE_ADMIN_API_KEY", "admin-secret")
     monkeypatch.setenv("JANE_EMAIL_API_KEY", "email-secret")
-    monkeypatch.setenv("JANE_MIN_DOC_FREQ", "1")
     import importlib
 
     from jane_server import config
@@ -68,7 +67,10 @@ def client(tmp_path, monkeypatch):
     importlib.reload(app_mod)
     from starlette.testclient import TestClient
 
-    with TestClient(app_mod.create_app()) as c:
+    app = app_mod.create_app()
+    # Tiny test corpus: relax the MoreLikeThis doc-frequency floor so terms aren't all dropped.
+    app.state.index_manager.min_doc_freq = 1
+    with TestClient(app) as c:
         yield c
 
 

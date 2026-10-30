@@ -49,9 +49,7 @@ def build(args) -> int:
         print(
             f"{datetime.datetime.now():%H:%M:%S}\tLoading journal metadata (offline={args.offline})"
         )
-        metadata = load_journal_metadata(
-            api_key=args.ncbi_api_key, email=args.email, offline=args.offline
-        )
+        metadata = load_journal_metadata(offline=args.offline)
         print(
             f"  open-access ISSNs: {len(metadata.open_access_issns)}; "
             f"medline-indexed ISSNs: {len(metadata.medline_indexed_issns)}; "
@@ -92,8 +90,6 @@ def main() -> None:
     parser.add_argument("--version", default=os.environ.get("JANE_INDEX_VERSION", ""))
     parser.add_argument("--promote", action="store_true", help="Write current.txt pointer last.")
     parser.add_argument("--offline", action="store_true", help="Skip metadata downloads.")
-    parser.add_argument("--ncbi-api-key", default=os.environ.get("JANE_NCBI_API_KEY", ""))
-    parser.add_argument("--email", default=os.environ.get("JANE_NCBI_EMAIL", ""))
     parser.add_argument("--limit", type=int, default=None, help="Cap rows (for testing).")
     parser.add_argument("--heap", type=int, default=1_000_000_000)
     parser.add_argument("--threads", type=int, default=1)

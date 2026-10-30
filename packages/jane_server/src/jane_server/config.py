@@ -11,8 +11,6 @@ class Settings(BaseSettings):
     s3_bucket: str = ""
     admin_api_key: str = ""
     email_api_key: str = ""
-    # MLT doc-frequency threshold (Lucene default 5). Lower for tiny corpora/tests.
-    min_doc_freq: int = 5
 
 
 settings = Settings()

@@ -1,22 +1,19 @@
 """Fetch + join journal-level metadata (NOT stored in SQLite). See NOTES section 4.
 
-Sources (join by ISSN; Eigenfactor removed entirely):
+Every source is a plain bulk-file download (no paged API calls, no API key needed), mirroring
+the legacy JaneMasterIndexingScript. Sources are joined by ISSN (Eigenfactor removed entirely):
   - DOAJ open access:        https://doaj.org/csv
   - PMC jlist (pmcmonths):   https://cdn.ncbi.nlm.nih.gov/pmc/home/jlist.csv
-  - Medline-indexed ISSNs:   NCBI E-utilities nlmcatalog "currentlyindexed"
-                             (esearch -> UIDs -> esummary -> ISSNList). Needs polite rate
-                             limiting; an API key lifts the 3 req/s cap.
+  - Medline-indexed ISSNs:   NLM's J_Medline.txt journal list
+                             https://ftp.ncbi.nlm.nih.gov/pubmed/J_Medline.txt
 
-J_Medline is no longer needed: the SQLite already carries journal title/abbrev/ISSN, and
-nlmcatalog esummary returns ISSNs directly. NIHPA has no upstream source and defaults False.
+NIHPA has no upstream source and defaults False.
 """
 
 from __future__ import annotations
 
 import csv
 import io
-import re
-import time
 from dataclasses import dataclass, field
 
 import httpx
@@ -24,11 +21,7 @@ from jane_core.schema import PMC_MONTHS_UNKNOWN
 
 DOAJ_URL = "https://doaj.org/csv"
 PMC_JLIST_URL = "https://cdn.ncbi.nlm.nih.gov/pmc/home/jlist.csv"
-EUTILS = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils"
-
-_ID_RE = re.compile(r"<Id>(\d+)</Id>")
-_COUNT_RE = re.compile(r"<Count>(\d+)</Count>")
-_ISSN_RE = re.compile(r"<issn>([0-9Xx\-]+)</issn>")
+J_MEDLINE_URL = "https://ftp.ncbi.nlm.nih.gov/pubmed/J_Medline.txt"
 
 
 @dataclass
@@ -99,69 +92,39 @@ def _parse_embargo(text: str) -> int | None:
         return None
 
 
-def fetch_medline_indexed_issns(
-    client: httpx.Client, api_key: str | None, email: str | None, batch_size: int = 500
-) -> set[str]:
-    """esearch nlmcatalog 'currentlyindexed' -> UIDs -> esummary -> all ISSNs."""
-    common = {}
-    if api_key:
-        common["api_key"] = api_key
-    if email:
-        common["email"] = email
+def parse_j_medline(text: str) -> set[str]:
+    """Parse NLM's J_Medline.txt into the set of ISSNs of journals indexed in MEDLINE.
 
-    uids: list[str] = []
-    retstart = 0
-    total = None
-    while total is None or retstart < total:
-        params = {
-            "db": "nlmcatalog",
-            "term": "currentlyindexed",
-            "retmax": str(batch_size),
-            "retstart": str(retstart),
-            **common,
-        }
-        text = _get(client, f"{EUTILS}/esearch.fcgi", params=params).text
-        if total is None:
-            m = _COUNT_RE.search(text)
-            total = int(m.group(1)) if m else 0
-        page = _ID_RE.findall(text)
-        if not page:
-            break
-        uids.extend(page)
-        retstart += batch_size
-        _sleep(api_key)
-
+    The file is a flat list of records separated by dashed lines; each record carries an
+    ``ISSN (Print):`` and an ``ISSN (Online):`` field (either may be blank).
+    """
     issns: set[str] = set()
-    for start in range(0, len(uids), batch_size):
-        chunk = uids[start : start + batch_size]
-        params = {"db": "nlmcatalog", "id": ",".join(chunk), "version": "2.0", **common}
-        text = _get(client, f"{EUTILS}/esummary.fcgi", params=params).text
-        issns.update(_ISSN_RE.findall(text))
-        _sleep(api_key)
+    for line in text.splitlines():
+        if line.startswith(("ISSN (Print):", "ISSN (Online):")):
+            value = line.split(":", 1)[1].strip()
+            if value:
+                issns.add(value)
     return issns
 
 
-def _sleep(api_key: str | None) -> None:
-    # NCBI allows 10 req/s with a key, 3 without. Stay polite.
-    time.sleep(0.11 if api_key else 0.34)
+def fetch_medline_indexed_issns(client: httpx.Client) -> set[str]:
+    """Download NLM's J_Medline.txt and return the ISSNs of MEDLINE-indexed journals."""
+    return parse_j_medline(_get(client, J_MEDLINE_URL).text)
 
 
-def load_journal_metadata(
-    api_key: str | None = None,
-    email: str | None = None,
-    offline: bool = False,
-) -> JournalMetadata:
+def load_journal_metadata(offline: bool = False) -> JournalMetadata:
     """Download all sources and return the joined ISSN -> metadata structure.
 
-    ``offline=True`` returns empty metadata (everything not-OA, not-indexed, pmc unknown):
-    useful for tests and air-gapped runs.
+    Every source is a single bulk-file download; no API key is required. ``offline=True``
+    returns empty metadata (everything not-OA, not-indexed, pmc unknown): useful for tests
+    and air-gapped runs.
     """
     if offline:
         return JournalMetadata()
     with httpx.Client(follow_redirects=True, headers={"User-Agent": "JANE-indexer"}) as client:
         open_access = parse_doaj(_get(client, DOAJ_URL).text)
         pmc = parse_pmc_jlist(_get(client, PMC_JLIST_URL).text)
-        medline = fetch_medline_indexed_issns(client, api_key, email)
+        medline = fetch_medline_indexed_issns(client)
     return JournalMetadata(
         open_access_issns=open_access,
         medline_indexed_issns=medline,

@@ -43,7 +43,7 @@ class _ServiceProxy:
 
 def create_app() -> FastAPI:
     logging.basicConfig(level=logging.INFO)
-    manager = IndexManager(settings.index_path, min_doc_freq=settings.min_doc_freq)
+    manager = IndexManager(settings.index_path)
 
     mcp = build_mcp(_ServiceProxy(manager), email_api_key=settings.email_api_key)
     mcp_app = mcp.streamable_http_app(streamable_http_path="/")
