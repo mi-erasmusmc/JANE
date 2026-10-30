@@ -1,0 +1,9 @@
+# Caddy: automatic HTTPS + static files + reverse proxy to Uvicorn. TODO: set your domain.
+jane.example.org {
+    encode zstd gzip
+    handle_path /static/* {
+        root * /opt/jane/packages/jane_server/src/jane_server/static
+        file_server
+    }
+    reverse_proxy 127.0.0.1:8000
+}

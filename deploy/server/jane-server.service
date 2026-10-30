@@ -1,0 +1,15 @@
+[Unit]
+Description=JANE server (FastAPI + REST + MCP)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+# TODO: set paths/user. Runs Uvicorn with a few workers over the local Tantivy index.
+WorkingDirectory=/opt/jane
+EnvironmentFile=/etc/jane/jane.env
+ExecStart=/opt/jane/.venv/bin/uvicorn jane_server.app:create_app --factory --host 127.0.0.1 --port 8000 --workers 4
+Restart=on-failure
+User=jane
+
+[Install]
+WantedBy=multi-user.target

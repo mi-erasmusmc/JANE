@@ -1,0 +1,10 @@
+[Unit]
+Description=Periodically check S3 for a newly promoted JANE index
+
+[Timer]
+# Checks hourly; the pointer only changes when the heavy box promotes a build.
+OnCalendar=hourly
+Persistent=true
+
+[Install]
+WantedBy=timers.target

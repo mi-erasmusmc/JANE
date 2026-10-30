@@ -1,0 +1,12 @@
+[Unit]
+Description=JANE monthly indexer (Stage 2): build + upload index to S3
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/jane
+EnvironmentFile=/etc/jane/jane-indexer.env
+# Build + upload. Promotion (writing current.txt) can be gated behind --promote.
+ExecStart=/opt/jane/.venv/bin/jane-index
+User=jane

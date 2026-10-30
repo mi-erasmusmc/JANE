@@ -1,0 +1,16 @@
+# uv workspace root (virtual — not an installable package itself).
+# Members declare their own dependencies so each machine installs only what it runs:
+#   light server:  uv sync --package jane-server
+#   heavy indexer: uv sync --package jane-indexer
+[tool.uv.workspace]
+members = ["packages/*"]
+
+[dependency-groups]
+dev = [
+    "pytest>=8",
+    "ruff>=0.6",
+]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100

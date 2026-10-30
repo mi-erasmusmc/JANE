@@ -1,0 +1,7 @@
+[Unit]
+Description=Pull promoted JANE index from S3 and reload
+
+[Service]
+Type=oneshot
+EnvironmentFile=/etc/jane/jane.env
+ExecStart=/opt/jane/deploy/server/pull-index.sh

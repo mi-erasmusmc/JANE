@@ -1,0 +1,21 @@
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+.ruff_cache/
+.idea/
+
+# Environment / secrets
+.env
+
+# Local data & built indexes (not source)
+PubMed.sqlite
+*.sqlite
+data/
+index-*/
+*.tar.zst
+current/
