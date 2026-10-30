@@ -6,10 +6,13 @@
     if (e.style.display === 'none') { e.style.display = 'block'; b.value = 'Hide articles'; }
     else { e.style.display = 'none'; b.value = 'Show articles'; }
   }
+  function setCheckboxDisplay(box) {
+    box.parentNode.className = box.checked ? 'styledCheckboxWrap wrapChecked' : 'styledCheckboxWrap';
+  }
   function setAll(state) {
     var f = document.suggestionsform;
     for (var i = 0; i < f.length; i++)
-      if (f[i].type === 'checkbox') f[i].checked = state;
+      if (f[i].type === 'checkbox') { f[i].checked = state; setCheckboxDisplay(f[i]); }
   }
   function exportCitations() {
     var f = document.suggestionsform, any = false;
@@ -49,7 +52,8 @@
     </td>
     <td>
       <span name="Wrap_PMID_{{ p.pmid }}" class="styledCheckboxWrap">
-        <input type="checkbox" name="PMID_{{ p.pmid }}" value="{{ p.pmid }}" class="styledCheckbox" />
+        <input type="checkbox" name="PMID_{{ p.pmid }}" value="{{ p.pmid }}" class="styledCheckbox"
+               onclick="setCheckboxDisplay(this)" />
       </span>
     </td>
     <td>
