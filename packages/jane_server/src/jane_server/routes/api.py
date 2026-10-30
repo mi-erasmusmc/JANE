@@ -6,12 +6,11 @@ Metrics-only structured logging (no raw query text) replaces the old LogFile.
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, Header, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request
 from jane_core.filters import Filters
 from jane_core.models import Author, EMail, Journal, Paper
 from pydantic import BaseModel, Field
 
-from ..config import settings
 from ..logging_metrics import log_metrics
 
 router = APIRouter(prefix="/api", tags=["jane"])
@@ -98,15 +97,9 @@ def similar_papers(req: SimilarRequest, service=Depends(get_service)) -> list[Pa
         return results
 
 
-def require_email_key(x_api_key: str = Header(default="")) -> None:
-    if not settings.email_api_key or x_api_key != settings.email_api_key:
-        raise HTTPException(status_code=401, detail="Valid X-API-Key required")
-
-
 @router.post(
     "/author_emails",
     response_model=list[EMail],
-    dependencies=[Depends(require_email_key)],
 )
 def author_emails(req: EmailRequest, service=Depends(get_service)) -> list[EMail]:
     with log_metrics("author_emails") as m:

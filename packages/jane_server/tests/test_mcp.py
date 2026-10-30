@@ -18,7 +18,7 @@ class _StubService:
 
 
 def test_mcp_registers_expected_tools():
-    mcp = build_mcp(_StubService(), email_api_key="k")
+    mcp = build_mcp(_StubService())
     tools = asyncio.run(mcp.list_tools())
     names = {t.name for t in tools}
     assert names == {

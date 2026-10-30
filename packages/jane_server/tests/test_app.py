@@ -51,7 +51,6 @@ def client(tmp_path, monkeypatch):
     _build_index(str(idx_dir))
     monkeypatch.setenv("JANE_INDEX_PATH", str(idx_dir))
     monkeypatch.setenv("JANE_ADMIN_API_KEY", "admin-secret")
-    monkeypatch.setenv("JANE_EMAIL_API_KEY", "email-secret")
     import importlib
 
     from jane_server import config
@@ -100,10 +99,9 @@ def test_web_suggestions(client):
     assert "Article Influence" not in r.text
 
 
-def test_author_emails_requires_key(client):
+def test_author_emails_open(client):
     body = {"author": "Smith, J", "coauthors": ["Doe, A"]}
-    assert client.post("/api/author_emails", json=body).status_code == 401
-    r = client.post("/api/author_emails", json=body, headers={"X-API-Key": "email-secret"})
+    r = client.post("/api/author_emails", json=body)
     assert r.status_code == 200
     assert r.json()[0]["email"] == "smith@cardiology.edu"
 

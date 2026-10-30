@@ -113,7 +113,7 @@ there are **no paged API calls and no NCBI API key** required — just outbound 
 - Mount FastMCP in the **same** FastAPI app so it shares `SearchService` + the Tantivy handle (no second
   index copy). Transport: **Streamable HTTP**.
 - Tools: `suggest_journals`, `suggest_authors`, `find_similar_papers` (open, per-IP rate limited);
-  `find_author_emails` (**API-key gated** + stricter limits; keep the disambiguation requirement).
+  `find_author_emails` (open, **stricter** per-IP rate limit; keep the disambiguation requirement).
 - Give each tool a precise description + input schema so agents call them correctly.
 
 ## 9. Scoring fidelity caveat

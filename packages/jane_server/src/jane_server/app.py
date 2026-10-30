@@ -15,6 +15,7 @@ from fastapi.staticfiles import StaticFiles
 
 from .config import settings
 from .index_manager import IndexManager
+from .logging_metrics import configure_metrics_logging
 from .mcp.server import build_mcp
 from .routes import admin, api, web
 
@@ -43,9 +44,10 @@ class _ServiceProxy:
 
 def create_app() -> FastAPI:
     logging.basicConfig(level=logging.INFO)
+    configure_metrics_logging(settings.metrics_log)
     manager = IndexManager(settings.index_path)
 
-    mcp = build_mcp(_ServiceProxy(manager), email_api_key=settings.email_api_key)
+    mcp = build_mcp(_ServiceProxy(manager))
     mcp_app = mcp.streamable_http_app(streamable_http_path="/")
 
     @contextlib.asynccontextmanager

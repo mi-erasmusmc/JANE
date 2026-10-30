@@ -1,7 +1,7 @@
 """MCP server (MCPServer / FastMCP, Streamable HTTP), mounted into the FastAPI app.
 
 Tools: suggest_journals, suggest_authors, find_similar_papers (open, per-IP rate limited);
-find_author_emails (API-key gated + stricter limits, keeps disambiguation). All delegate to
+find_author_emails (open, stricter per-IP rate limit, keeps disambiguation). All delegate to
 the shared SearchService. See IMPLEMENTATION_NOTES.md section 8.
 """
 
@@ -14,6 +14,8 @@ from collections import defaultdict, deque
 from jane_core.filters import Filters
 from jane_core.search_service import SearchService
 from mcp.server.mcpserver import Context, MCPServer
+
+from ..logging_metrics import log_metrics
 
 # Per-IP rate limits (requests per rolling 60 s window).
 CORE_RATE_LIMIT = 60
@@ -49,16 +51,11 @@ def _client_ip(ctx: Context) -> str:
     return headers.get("x-real-ip", "unknown")
 
 
-def _api_key(ctx: Context) -> str:
-    headers = {k.lower(): v for k, v in (ctx.headers or {}).items()}
-    return headers.get("x-api-key", "")
-
-
 class RateLimitExceeded(Exception):
     pass
 
 
-def build_mcp(search_service: SearchService, email_api_key: str = "") -> MCPServer:
+def build_mcp(search_service: SearchService) -> MCPServer:
     """Return the configured MCPServer bound to the shared SearchService."""
     mcp = MCPServer(
         name="JANE",
@@ -85,8 +82,10 @@ def build_mcp(search_service: SearchService, email_api_key: str = "") -> MCPServ
     )
     def suggest_journals(text: str, ctx: Context) -> list[dict]:
         _guard(ctx, "core", CORE_RATE_LIMIT)
-        results = search_service.suggest_journals(text, Filters())
-        return [j.model_dump() for j in results]
+        with log_metrics("mcp_suggest_journals") as m:
+            results = search_service.suggest_journals(text, Filters())
+            m["results"] = len(results)
+            return [j.model_dump() for j in results]
 
     @mcp.tool(
         description=(
@@ -96,8 +95,10 @@ def build_mcp(search_service: SearchService, email_api_key: str = "") -> MCPServ
     )
     def suggest_authors(text: str, ctx: Context) -> list[dict]:
         _guard(ctx, "core", CORE_RATE_LIMIT)
-        results = search_service.suggest_authors(text, Filters())
-        return [a.model_dump() for a in results]
+        with log_metrics("mcp_suggest_authors") as m:
+            results = search_service.suggest_authors(text, Filters())
+            m["results"] = len(results)
+            return [a.model_dump() for a in results]
 
     @mcp.tool(
         description=(
@@ -107,22 +108,24 @@ def build_mcp(search_service: SearchService, email_api_key: str = "") -> MCPServ
     )
     def find_similar_papers(text: str, ctx: Context, count: int = 20) -> list[dict]:
         _guard(ctx, "core", CORE_RATE_LIMIT)
-        results = search_service.find_similar_papers(text, Filters(), count=count)
-        return [p.model_dump() for p in results]
+        with log_metrics("mcp_find_similar_papers") as m:
+            results = search_service.find_similar_papers(text, Filters(), count=count)
+            m["results"] = len(results)
+            return [p.model_dump() for p in results]
 
     @mcp.tool(
         description=(
-            "Find e-mail addresses for an author of recent PubMed papers. REQUIRES an "
-            "X-API-Key header. To disambiguate, you MUST provide `coauthors` (names of "
-            "co-authors on the author's papers); without co-authors no results are "
-            "returned. Returns e-mail addresses with the year and pmid where each was found."
+            "Find e-mail addresses for an author of recent PubMed papers. To disambiguate, "
+            "you MUST provide `coauthors` (names of co-authors on the author's papers); "
+            "without co-authors no results are returned. Returns e-mail addresses with the "
+            "year and pmid where each was found."
         )
     )
     def find_author_emails(author: str, coauthors: list[str], ctx: Context) -> list[dict]:
-        if not email_api_key or _api_key(ctx) != email_api_key:
-            raise PermissionError("find_author_emails requires a valid X-API-Key header.")
         _guard(ctx, "email", EMAIL_RATE_LIMIT)
-        results = search_service.find_author_emails(author, coauthors)
-        return [e.model_dump() for e in results]
+        with log_metrics("mcp_find_author_emails") as m:
+            results = search_service.find_author_emails(author, coauthors)
+            m["results"] = len(results)
+            return [e.model_dump() for e in results]
 
     return mcp

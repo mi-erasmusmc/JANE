@@ -233,6 +233,39 @@ Example: `(malaria OR tuberculosis) AND "vaccine development"`
 > queries still work, and nothing crashes). Rebuild the index with `uv run jane-index`
 > (Step 3) to enable phrases in production.
 
+### Feature-usage metrics
+
+To track how often each feature is used, the server emits one structured line per request
+on the `jane.metrics` logger — with **no raw query text**:
+
+```
+2026-10-30 11:41:32,869 endpoint=suggest_journals status=ok results=33 latency_ms=38.0
+```
+
+The `endpoint` field distinguishes every surface:
+
+- **Web UI** — `web_journals`, `web_authors`, `web_similar`, `web_email`
+- **REST API** — `suggest_journals`, `suggest_authors`, `similar_papers`, `author_emails`
+- **MCP** — `mcp_suggest_journals`, `mcp_suggest_authors`, `mcp_find_similar_papers`,
+  `mcp_find_author_emails`
+
+By default these lines go to the console (interleaved with uvicorn output). Set
+`JANE_METRICS_LOG` to write them to a dedicated rotating file instead (10 MB × 5 backups),
+isolated from the rest of the log stream:
+
+```bash
+JANE_INDEX_PATH=./index JANE_METRICS_LOG=./jane-metrics.log \
+  uv run uvicorn jane_server.app:create_app --factory --port 8000
+```
+
+Tally usage per feature with a one-liner, e.g.:
+
+```bash
+grep -o 'endpoint=[a-z_]*' jane-metrics.log | sort | uniq -c | sort -rn
+```
+
+Because each line is timestamped, you can also restrict a count to a date range with
+`grep '^2026-10-30' jane-metrics.log` (or `awk` on the timestamp) before aggregating.
 
 Step 5 — Use the REST API
 -------------------------
@@ -265,12 +298,11 @@ instead of MoreLikeThis — same syntax as the web keyword mode (`AND`/`OR`/`NOT
 `"phrases"`); e.g. `{"text": "(malaria OR tuberculosis) AND \"vaccine development\"",
 "structured": true}`.
 
-**Author emails** are gated behind an API key (set `JANE_EMAIL_API_KEY`), require
-co-authors for disambiguation, and are sent via the `X-API-Key` header:
+**Author emails** require co-authors for disambiguation (without co-authors no results are
+returned); the endpoint is open:
 
 ```bash
 curl -s localhost:8000/api/author_emails -H 'content-type: application/json' \
-  -H 'X-API-Key: your-email-key' \
   -d '{"author": "Smith J", "coauthors": ["Jones A", "Lee K"]}'
 ```
 
@@ -280,7 +312,8 @@ Step 6 — Use the MCP endpoint
 
 The MCP server (Streamable HTTP) is mounted at `/mcp` and exposes four tools:
 `suggest_journals`, `suggest_authors`, `find_similar_papers`, and `find_author_emails`
-(the email tool is API-key gated with stricter rate limits, via an `X-API-Key` header).
+(all open; the email tool keeps stricter per-IP rate limits and still requires co-authors
+for disambiguation).
 
 Point any MCP client at `http://<host>:8000/mcp`. Example with the Python MCP SDK:
 
@@ -346,7 +379,7 @@ Ready-to-adapt systemd units, a Caddyfile, and the pull script live under `deplo
 
 1. `uv sync --package jane-server` into `/opt/jane`.
 2. Copy `deploy/server/jane.env.example` to `/etc/jane/jane.env` and fill in `JANE_INDEX_PATH`,
-   `JANE_S3_BUCKET`, `JANE_ADMIN_API_KEY`, `JANE_EMAIL_API_KEY`.
+   `JANE_S3_BUCKET`, `JANE_ADMIN_API_KEY`.
 3. Install `deploy/server/jane-server.service` (runs Uvicorn with several workers).
 4. Install `deploy/server/jane-index-pull.{service,timer}`. The pull job
    (`deploy/server/pull-index.sh`) runs hourly: it reads `current.txt` from S3, and if a new
@@ -367,7 +400,7 @@ Server (`jane_server`, `JANE_` prefix, read from env or `/etc/jane/jane.env`):
 | `JANE_INDEX_PATH` | `/var/jane/current` | Path (usually a symlink) to the active index directory |
 | `JANE_S3_BUCKET` | *(empty)* | Bucket the pull job reads from |
 | `JANE_ADMIN_API_KEY` | *(empty)* | Required (`X-API-Key`) for `POST /admin/reload` |
-| `JANE_EMAIL_API_KEY` | *(empty)* | Required (`X-API-Key`) for the author-email REST/MCP tools |
+| `JANE_METRICS_LOG` | *(empty)* | If set, feature-usage metrics are written to this rotating file instead of the console (see "Feature-usage metrics") |
 
 Indexer environment variables are listed in the Step 3 table.
 
