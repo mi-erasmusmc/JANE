@@ -1,12 +1,32 @@
-{# Base layout. TODO: port markup from legacy/JaneClient (minus Article Influence). #}
 <!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>{% block title %}JANE{% endblock %}</title>
+    <title>{% block title %}Journal / Author Name Estimator{% endblock %}</title>
+    <link rel="shortcut icon" href="/static/jane.ico" />
+    <link rel="stylesheet" href="/static/home.css" />
+    {% block head %}{% endblock %}
   </head>
   <body>
-    {% block content %}{% endblock %}
+    <div id="pagewrapper">
+      {% block header %}
+      <div id="smallheader"><a href="/"><h1>Journal / Author Name Estimator</h1></a></div>
+      {% endblock %}
+      {% block content %}{% endblock %}
+      <div id="footer">
+        Copyright 2007,
+        <a href="https://biosemantics.org/index.php">The Biosemantics Group</a>.
+        Research funded by <a href="https://www.nbic.nl">NBIC</a>.
+        Created and maintained by
+        <script>
+          var username = "schuemie"; var hostname = "ohdsi.org";
+          document.write("<a href=" + "mail" + "to:" + username + "@" + hostname + ">Martijn Schuemie</a>.");
+        </script>
+        <noscript>Martijn Schuemie.</noscript>
+        <br />Hosting provided by the
+        <a href="https://ohdsi.org">Observational Health Data Science and Informatics</a>
+      </div>
+    </div>
   </body>
 </html>

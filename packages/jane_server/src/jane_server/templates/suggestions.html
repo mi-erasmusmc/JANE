@@ -1,3 +1,142 @@
 {% extends "base.html" %}
-{# Results: ranked journals + authors. NO Article Influence bar. TODO. #}
-{% block content %}{% endblock %}
+{% block head %}
+<script>
+  function showInfo(infoName, buttonName) {
+    var e = document.getElementById(infoName), b = document.getElementById(buttonName);
+    if (e.style.display === 'none') { e.style.display = 'block'; b.value = 'Hide articles'; }
+    else { e.style.display = 'none'; b.value = 'Show articles'; }
+  }
+  function setAll(state) {
+    var f = document.suggestionsform;
+    for (var i = 0; i < f.length; i++)
+      if (f[i].type === 'checkbox') f[i].checked = state;
+  }
+  function exportCitations() {
+    var f = document.suggestionsform, any = false;
+    for (var i = 0; i < f.length; i++) if (f[i].type === 'checkbox' && f[i].checked) any = true;
+    if (!any) setAll(true);
+    var save = f.action, target = f.target;
+    f.action = '/export'; f.target = '_blank';
+    f.submit();
+    f.action = save; f.target = target;
+  }
+  function emailPopup(form) {
+    window.open('', 'email', 'height=300,width=450,scrollbars=yes');
+    form.target = 'email'; return true;
+  }
+</script>
+{% endblock %}
+
+{% macro citations(papers) %}
+<table>
+  <tr><th>Similarity</th><th></th><th>Citation</th></tr>
+  {% for p in papers %}
+  {% set score = (p.score * 100) | round | int %}
+  <tr>
+    <td>
+      <div id="bluebar" title="Similarity to your query is {{ score }}%">
+        <div id="bluebarfill" style="width:{{ score }}px; left:{{ 100 - score }}px;"></div>
+      </div>
+    </td>
+    <td>
+      <span name="Wrap_PMID_{{ p.pmid }}" class="styledCheckboxWrap">
+        <input type="checkbox" name="PMID_{{ p.pmid }}" value="{{ p.pmid }}" class="styledCheckbox" />
+      </span>
+    </td>
+    <td>
+      <a href="https://pubmed.ncbi.nlm.nih.gov/{{ p.pmid }}" target="_blank">{{ p.authors | join(', ') }}</a><br />
+      <strong>{{ p.title }}</strong><br />
+      {{ p.journal }}. {{ p.year }}<br /><br />
+    </td>
+  </tr>
+  {% endfor %}
+</table>
+{% endmacro %}
+
+{% block content %}
+<p>
+  {% if action == 'journals' %}These journals have articles most similar to your input:<br />
+  {% elif action == 'authors' %}These authors have written articles most similar to your input:<br />
+  {% else %}These articles are most similar to your input:<br />{% endif %}
+  &quot;<em>{{ text[:100] }}{% if text|length > 100 %}...{% endif %}</em>&quot;<br />
+  {% if summary.languages %}Limited to the languages: <em>{{ summary.languages }}</em><br />{% endif %}
+  {% if summary.types %}Limited to the publication types: <em>{{ summary.types }}</em><br />{% endif %}
+  {% if summary.openaccess %}Limited to <em>{{ summary.openaccess }}</em><br />{% endif %}
+  {% if summary.pubmedcentral %}Limited to <em>{{ summary.pubmedcentral }}</em><br />{% endif %}
+</p>
+
+<form name="suggestionsform" action="/suggestions" method="post">
+{% if action == 'papers' %}
+  {% if not papers %}
+  <p>No items found matching your query.</p>
+  {% else %}
+  {{ citations(papers) }}
+  {% endif %}
+{% else %}
+  {% set items = journals if action == 'journals' else authors %}
+  {% if not items %}
+  <p>No items found matching your query.</p>
+  {% if summary %}Perhaps you could remove some of the publication type limits?{% endif %}
+  {% else %}
+  <table width="100%">
+    <tr>
+      <th>Confidence</th>
+      <th>{{ 'Journal' if action == 'journals' else 'Author' }}</th>
+      {% if action == 'authors' %}<th>E-mail</th>{% endif %}
+      <th>Articles</th>
+    </tr>
+    {% for item in items %}
+    {% set score = (item.score * 100) | round | int %}
+    {% set pmids = item.papers | map(attribute='pmid') | join('+OR+') %}
+    <tr {% if loop.index0 % 2 == 1 %}class="line"{% endif %}>
+      <td>
+        <div id="bluebar" title="Confidence is {{ score }}%">
+          <div id="bluebarfill" style="width:{{ score }}px; left:{{ 100 - score }}px;"></div>
+        </div>
+      </td>
+      <td width="100%">
+        {{ item.name }}
+        {% if action == 'journals' %}
+          {% if item.openaccess %}<div id="openaccess"><a href="/static/openaccess.html" target="_blank">High-quality&nbsp;open&nbsp;access</a></div>{% endif %}
+          {% if item.medlineindexed %}<div id="medlineindexed"><a href="/static/medlineindexed.html" target="_blank">Medline-indexed</a></div>{% endif %}
+          {% if item.pmcmonths is not none and item.pmcmonths != -1 %}<div id="pubmedcentral"><a href="/static/pubmedcentral.html" target="_blank">PMC</a></div>{% endif %}
+        {% endif %}
+      </td>
+      {% if action == 'authors' %}
+      <td>
+        <form name="emailform{{ loop.index0 }}" action="/email" method="post" onsubmit="return emailPopup(this)" style="display:inline">
+          <input type="hidden" name="author" value="{{ item.name }}" />
+          <input type="hidden" name="coauthors" value="{{ item.papers | map(attribute='authors') | sum(start=[]) | reject('equalto', item.name) | unique | join(';') }}" />
+          <input class="bigButton" value="E-mail" type="submit" title="Search for the e-mail address of {{ item.name }}" />
+        </form>
+      </td>
+      {% endif %}
+      <td>
+        <input class="bigButton" id="button{{ loop.index0 }}" value="Show articles" type="button"
+               onclick="showInfo('info{{ loop.index0 }}', 'button{{ loop.index0 }}')" />
+      </td>
+    </tr>
+    <tr>
+      <td colspan="4">
+        <div id="info{{ loop.index0 }}" class="expandable" style="display:none;">
+          The confidence score for <strong>{{ item.name }}</strong> is based on these articles:<br />&nbsp;
+          {{ citations(item.papers) }}
+          <a class="lowButton" href="{{ pubmed_url }}?term={{ pmids }}" target="_blank"
+             title="Show these and other similar articles in PubMed">Explore more in PubMed</a>
+        </div>
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% endif %}
+{% endif %}
+  <input type="hidden" name="text" value="{{ text }}" />
+  <p>
+    <input class="lowButton" value="Select all" type="button" onclick="setAll(true)" />
+    <input class="lowButton" value="Deselect all" type="button" onclick="setAll(false)" />
+    <input class="lowButton" value="Export citations" type="button" onclick="exportCitations()"
+           title="Export citations in MEDLINE format" />
+  </p>
+</form>
+<p>Click <a href="/">here</a> to perform another search.</p>
+{% endblock %}

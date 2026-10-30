@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Journal / Author Name Estimator</title>
+  <link rel="shortcut icon" href="/static/jane.ico" />
+  <link rel="stylesheet" href="/static/home.css" />
+</head>
+<body>
+<div id="emailwrapper">
+  <h2>E-mail</h2>
+  {% if not emails %}
+  <p>No e-mail address was found for {{ author }}</p>
+  {% else %}
+  <p>These e-mail addresses were found for {{ author }}:</p>
+  <table>
+    <tr><th>Year</th><th>E-mail address</th><th>Article</th></tr>
+    {% for e in emails %}
+    <tr {% if loop.index0 % 2 == 1 %}class="line"{% endif %}>
+      <td>{{ e.year }}</td>
+      <td width="100%">
+        <script>
+          var p = "{{ e.email }}".split("@");
+          var lt = p[0] + "\u0040" + p[1];
+          document.write('<a href="mai' + 'lto:' + lt + '">' + lt + '</a>');
+        </script>
+        <noscript>(enable JavaScript to view)</noscript>
+      </td>
+      <td>
+        <input class="lowButton" value="Show article" type="button"
+               onclick="window.open('https://pubmed.ncbi.nlm.nih.gov/{{ e.pmid }}')"
+               title="Show the article where the e-mail address was found." />
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% endif %}
+  <input class="lowButton" value="Close window" type="button"
+         onclick="window.close();" title="Close window" />
+</div>
+</body>
+</html>

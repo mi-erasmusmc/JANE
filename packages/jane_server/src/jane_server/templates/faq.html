@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block header %}
+<div id="header"><h1><a href="/">Journal / Author Name Estimator</a></h1></div>
+{% endblock %}
+{% block content %}
+<h2>Frequently Asked Questions</h2>
+<ul>
+  <li><a href="#confidentiality">What about confidentiality? Is it safe to send my abstract to Jane?</a></li>
+  <li><a href="#how">How does Jane work?</a></li>
+  <li><a href="#updates">How often is the data behind Jane updated?</a></li>
+  <li><a href="#whichjournals">Which journals are included in Jane?</a></li>
+  <li><a href="#whichauthors">Which authors are included in Jane?</a></li>
+  <li><a href="#whichpapers">Which papers are included in Jane?</a></li>
+  <li><a href="#predatory">Could JANE recommend predatory journals?</a></li>
+  <li><a href="#api">Is it possible to access Jane programmatically?</a></li>
+</ul>
+<p><a href="/">Return to Jane</a></p>
+
+<a name="confidentiality"></a>
+<h3>What about confidentiality? Is it safe to send my abstract to Jane?</h3>
+<p>The information sent to the Jane server is not stored. It is kept in memory for as long as
+needed to calculate the scores and formulate the response page, and then it is discarded from
+memory. We log only anonymous metrics (endpoint, result counts, latency) &mdash; never your query
+text. We also include an option to 'scramble' your input (the button below the input box);
+scrambling puts all the words in alphabetical order in your browser (no information is sent for
+the scrambling), which makes the text hard to read without affecting Jane's performance.</p>
+
+<a name="how"></a>
+<h3>How does Jane work?</h3>
+<p>Jane first searches for the 50 articles that are most similar to your input. For each of these
+articles, a similarity score between that article and your input is calculated. The similarity
+scores of all the articles belonging to a certain journal or author are summed to calculate the
+confidence score for that journal or author. The results are ranked by confidence score. For more
+information, you can read
+<a href="https://www.ncbi.nlm.nih.gov/pubmed/18227119">our paper</a>.</p>
+<p>* For the technically curious: Jane uses the open-source search engine
+<a href="https://github.com/quickwit-oss/tantivy">Tantivy</a>. Titles and abstracts are matched
+using a "more like this" term extractor that preserves Jane's original analyzer.</p>
+
+<a name="updates"></a>
+<h3>How often is the data behind Jane updated?</h3>
+<p>We are currently updating the data once every month.</p>
+
+<a name="whichjournals"></a>
+<h3>Which journals are included in Jane?</h3>
+<p>Basically, all journals included in PubMed are included in Jane. However, in order to show only
+active journals, we do not show journals for which no entry was found in PubMed in the last year.</p>
+
+<a name="predatory"></a>
+<h3>Could JANE recommend predatory journals?</h3>
+<p>JANE relies on the data in PubMed, which can contain papers from predatory journals, and
+therefore these journals can appear in JANE's results. To help identify high-quality journals,
+JANE tags journals that are currently indexed in MEDLINE, and open access journals approved by the
+Directory of Open Access Journals (DOAJ).</p>
+
+<a name="whichauthors"></a>
+<h3>Which authors are included in Jane?</h3>
+<p>All authors that have published one or more articles in the last 10 years that have been
+included in PubMed, are included in Jane.</p>
+
+<a name="whichpapers"></a>
+<h3>Which papers are included in Jane?</h3>
+<p>All records in PubMed have been included that:</p>
+<ul>
+  <li>contained an abstract,</li>
+  <li>were published in the last 10 years,</li>
+  <li>did not belong to one of these categories: comment, editorial, news, historical article,
+  congresses, biography, newspaper article, practice guideline, interview, bibliography, legal
+  cases, lectures, consensus development conference, addresses, clinical conference, patient
+  education handout, directory, technical report, festschrift, retraction of publication,
+  retracted publication, duplicate publication, scientific integrity review, published erratum,
+  periodical index, dictionary, legislation or government publication.</li>
+</ul>
+
+<a name="api"></a>
+<h3>Is it possible to access Jane programmatically?</h3>
+<p>Yes. Jane exposes a JSON REST API (see <code>/docs</code>) and a Model Context Protocol (MCP)
+endpoint at <code>/mcp</code> for AI assistants, with tools to suggest journals, suggest authors
+and find similar papers.</p>
+
+<p><a href="/">Return to Jane</a></p>
+{% endblock %}
