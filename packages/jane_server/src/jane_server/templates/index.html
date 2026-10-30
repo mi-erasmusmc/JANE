@@ -21,13 +21,23 @@
 {% block content %}
 <div id="leftcolumn">
   <p>&nbsp;</p>
+  {% if structured %}
+  <label for="queryField">Enter your query here:</label>
+  <div id="gray">(or, click <a href="/">here</a> to search using title and/or abstract)</div>
+  <form name="form" action="/suggestions" method="post">
+    <input type="hidden" name="structured" value="true" />
+    <input type="text" name="text" size="80" id="queryField" /><br />
+    <div id="gray">For example: (malaria OR tuberculosis) AND "vaccine development"</div><br />
+  {% else %}
   <label for="abstractArea">Insert your title and/or abstract here:</label>
+  <div id="gray">(or, click <a href="/?structured=true">here</a> to search using keywords)</div>
   <form name="form" action="/suggestions" method="post">
     <textarea name="text" rows="20" cols="80" id="abstractArea"></textarea><br />
     <input class="lowButton" name="scramble" value="Scramble" type="button"
            onclick="doScramble()" title="Scrambles your text so nobody else can read it" />
     <input class="lowButton" name="clear" value="Clear" type="button"
            onclick="doClear()" title="Clears the text area" />
+  {% endif %}
     <input class="lowButton" id="extraButton" value="Show extra options" type="button"
            onclick="showExtra()" title="Shows or hides some extra search options" /><br />
     <div id="extra" style="display: none;">

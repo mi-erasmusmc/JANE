@@ -41,6 +41,7 @@ class FilterModel(BaseModel):
 class SuggestRequest(BaseModel):
     text: str
     filter: FilterModel = Field(default_factory=FilterModel)
+    structured: bool = False
 
 
 class SimilarRequest(BaseModel):
@@ -48,6 +49,7 @@ class SimilarRequest(BaseModel):
     filter: FilterModel = Field(default_factory=FilterModel)
     count: int = 20
     offset: int = 0
+    structured: bool = False
 
 
 class EmailRequest(BaseModel):
@@ -65,7 +67,9 @@ def get_service(request: Request):
 @router.post("/suggest_journals", response_model=list[Journal])
 def suggest_journals(req: SuggestRequest, service=Depends(get_service)) -> list[Journal]:
     with log_metrics("suggest_journals") as m:
-        results = service.suggest_journals(req.text, req.filter.to_filters())
+        results = service.suggest_journals(
+            req.text, req.filter.to_filters(), structured=req.structured
+        )
         m["results"] = len(results)
         return results
 
@@ -73,7 +77,9 @@ def suggest_journals(req: SuggestRequest, service=Depends(get_service)) -> list[
 @router.post("/suggest_authors", response_model=list[Author])
 def suggest_authors(req: SuggestRequest, service=Depends(get_service)) -> list[Author]:
     with log_metrics("suggest_authors") as m:
-        results = service.suggest_authors(req.text, req.filter.to_filters())
+        results = service.suggest_authors(
+            req.text, req.filter.to_filters(), structured=req.structured
+        )
         m["results"] = len(results)
         return results
 
@@ -82,7 +88,11 @@ def suggest_authors(req: SuggestRequest, service=Depends(get_service)) -> list[A
 def similar_papers(req: SimilarRequest, service=Depends(get_service)) -> list[Paper]:
     with log_metrics("similar_papers") as m:
         results = service.find_similar_papers(
-            req.text, req.filter.to_filters(), count=req.count, offset=req.offset
+            req.text,
+            req.filter.to_filters(),
+            count=req.count,
+            offset=req.offset,
+            structured=req.structured,
         )
         m["results"] = len(results)
         return results

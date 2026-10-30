@@ -64,11 +64,15 @@ def _build_filters(
 
 
 @router.get("/", response_class=HTMLResponse)
-def index(request: Request) -> HTMLResponse:
+def index(request: Request, structured: bool = False) -> HTMLResponse:
     return templates.TemplateResponse(
         request,
         "index.html",
-        {"languages": LANGUAGES, "publication_types": PUBLICATION_TYPES},
+        {
+            "languages": LANGUAGES,
+            "publication_types": PUBLICATION_TYPES,
+            "structured": structured,
+        },
     )
 
 
@@ -77,6 +81,7 @@ def suggestions(
     request: Request,
     text: str = Form(""),
     action: str = Form("journals"),
+    structured: bool = Form(False),
     language: list[str] = Form(default=[]),
     type: list[str] = Form(default=[]),
     openaccess: str = Form("no preference"),
@@ -87,14 +92,14 @@ def suggestions(
     journals = authors = papers = None
     with log_metrics(f"web_{action}") as m:
         if action == "authors":
-            authors = service.suggest_authors(text, filters)
+            authors = service.suggest_authors(text, filters, structured=structured)
             m["results"] = len(authors)
         elif action == "papers":
-            papers = service.find_similar_papers(text, filters, count=50)
+            papers = service.find_similar_papers(text, filters, count=50, structured=structured)
             m["results"] = len(papers)
         else:
             action = "journals"
-            journals = service.suggest_journals(text, filters)
+            journals = service.suggest_journals(text, filters, structured=structured)
             m["results"] = len(journals)
     return templates.TemplateResponse(
         request,
@@ -102,6 +107,7 @@ def suggestions(
         {
             "text": text,
             "action": action,
+            "structured": structured,
             "journals": journals,
             "authors": authors,
             "papers": papers,

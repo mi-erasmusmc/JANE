@@ -213,6 +213,26 @@ Faces exposed:
 
 In production, static files are served by Caddy (see Step 9); `/static` here is the fallback.
 
+### Keyword (structured) search
+
+The default search treats your input as free text and finds similar documents
+(MoreLikeThis). The web UI also offers the legacy **keyword search** mode: open
+`http://localhost:8000/?structured=true` (or click the *"search using keywords"* link
+under the input box). This swaps the textarea for a single-line query box that is parsed
+as a boolean query against the article text, supporting:
+
+- `AND`, `OR`, `NOT` operators (uppercase); `OR` is the default between bare terms
+- grouping with parentheses
+- `"quoted phrases"` for exact adjacent-word matches
+
+Example: `(malaria OR tuberculosis) AND "vaccine development"`
+
+> **Quoted phrases require a positions-enabled index.** The `text` field is now indexed
+> with token positions (`index_option="position"`). An index built with an older JANE
+> release stores only term frequencies, so phrase queries return no results (boolean term
+> queries still work, and nothing crashes). Rebuild the index with `uv run jane-index`
+> (Step 3) to enable phrases in production.
+
 
 Step 5 — Use the REST API
 -------------------------
@@ -239,6 +259,11 @@ curl -s localhost:8000/api/similar_papers -H 'content-type: application/json' \
 `suggest_journals` returns a ranked list of `{name, score, openaccess, medlineindexed,
 pmcmonths, issn, journalabbr, papers[]}`; `suggest_authors` returns `{name, score, papers[]}`;
 `similar_papers` returns `{pmid, title, authors[], journal, year, score}`.
+
+All three accept an optional `"structured": true` flag to run a **keyword (boolean) query**
+instead of MoreLikeThis — same syntax as the web keyword mode (`AND`/`OR`/`NOT`, parentheses,
+`"phrases"`); e.g. `{"text": "(malaria OR tuberculosis) AND \"vaccine development\"",
+"structured": true}`.
 
 **Author emails** are gated behind an API key (set `JANE_EMAIL_API_KEY`), require
 co-authors for disambiguation, and are sent via the `X-API-Key` header:

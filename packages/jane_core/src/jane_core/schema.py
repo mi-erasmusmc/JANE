@@ -39,8 +39,11 @@ def build_schema():
     """Return the Tantivy Schema shared by the indexer (write) and server (query)."""
     sb = SchemaBuilder()
 
-    # Analyzed similarity field (MoreLikeThis target). Pre-normalized tokens -> whitespace.
-    sb.add_text_field(FIELD_TEXT, stored=False, tokenizer_name=TEXT_TOKENIZER, index_option="freq")
+    # Analyzed similarity field (MoreLikeThis target) + keyword/boolean search target.
+    # index_option="position" so Tantivy's query parser can run phrase queries ("a b") here.
+    sb.add_text_field(
+        FIELD_TEXT, stored=False, tokenizer_name=TEXT_TOKENIZER, index_option="position"
+    )
 
     # Identity / display.
     sb.add_integer_field(FIELD_PMID, stored=True, indexed=True, fast=True)

@@ -39,6 +39,7 @@ from .schema import (
     FIELD_TITLE,
     FIELD_YEAR,
 )
+from .text import normalize_query
 
 TOP_K = 50
 MAX_RESULT_SIZE = 100
@@ -63,12 +64,14 @@ class SearchService:
 
     # ---- public API ---------------------------------------------------------
 
-    def suggest_journals(self, text: str, filters: Filters | None = None) -> list[Journal]:
+    def suggest_journals(
+        self, text: str, filters: Filters | None = None, structured: bool = False
+    ) -> list[Journal]:
         if not text:
             return []
         # Legacy getJournals always appends "|recent": only currently-active journals.
         filters = replace(filters or Filters(), recent=True)
-        searcher, hits = self._search(text, filters, TOP_K)
+        searcher, hits = self._search(text, filters, TOP_K, structured)
         by_name: dict[str, Journal] = {}
         for score, addr in hits:
             doc = searcher.doc(addr)
@@ -90,11 +93,13 @@ class SearchService:
         _normalize_scores(journals)
         return journals[:MAX_RESULT_SIZE]
 
-    def suggest_authors(self, text: str, filters: Filters | None = None) -> list[Author]:
+    def suggest_authors(
+        self, text: str, filters: Filters | None = None, structured: bool = False
+    ) -> list[Author]:
         if not text:
             return []
         filters = filters or Filters()
-        searcher, hits = self._search(text, filters, TOP_K)
+        searcher, hits = self._search(text, filters, TOP_K, structured)
         by_name: dict[str, Author] = {}
         for score, addr in hits:
             doc = searcher.doc(addr)
@@ -116,11 +121,12 @@ class SearchService:
         filters: Filters | None = None,
         count: int = 20,
         offset: int = 0,
+        structured: bool = False,
     ) -> list[Paper]:
         if not text:
             return []
         filters = filters or Filters()
-        searcher, hits = self._search(text, filters, offset + count)
+        searcher, hits = self._search(text, filters, offset + count, structured)
         papers = [self._paper(searcher.doc(addr), score) for score, addr in hits]
         return papers[offset : offset + count]
 
@@ -169,18 +175,33 @@ class SearchService:
 
     # ---- internals ----------------------------------------------------------
 
-    def _search(self, text: str, filters: Filters, k: int):
+    def _search(self, text: str, filters: Filters, k: int, structured: bool = False):
         searcher = self.index.searcher()
-        mlt = self._mlt_query(searcher, text)
-        if mlt is None:
+        base = self._keyword_query(text) if structured else self._mlt_query(searcher, text)
+        if base is None:
             return searcher, []
-        query = self._with_filters(mlt, filters)
+        query = self._with_filters(base, filters)
         hits = searcher.search(query, max(k, 1)).hits
         if hits:
             max_score = hits[0][0]
             if max_score > 1:
                 hits = [(score / max_score, addr) for score, addr in hits]
         return searcher, hits
+
+    def _keyword_query(self, text: str):
+        """Legacy 'keyword search': parse a boolean/phrase query against FIELD_TEXT.
+
+        The query text is normalized (jane_core.text.normalize_query) so its terms match the
+        analyzed index tokens, then handed to Tantivy's query parser (default operator OR, as
+        in the legacy Lucene QueryParser). A query that fails to parse yields no results.
+        """
+        normalized = normalize_query(text)
+        if not normalized:
+            return None
+        try:
+            return self.index.parse_query(normalized, [FIELD_TEXT])
+        except ValueError:
+            return None
 
     def _mlt_query(self, searcher, text: str):
         terms = extract_terms(text, searcher, min_doc_freq=self.min_doc_freq)

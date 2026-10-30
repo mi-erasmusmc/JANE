@@ -145,3 +145,28 @@ def test_find_author_emails_requires_and_uses_disambiguation():
     svc = SearchService(_build_index(), min_doc_freq=1)
     emails = svc.find_author_emails("Smith, J", coauthors=["Doe, A"])
     assert [e.email for e in emails] == ["smith@onc.org"]
+
+
+def test_keyword_search_boolean_and_phrase():
+    svc = SearchService(_build_index(), min_doc_freq=1)
+
+    # Boolean AND: only doc 5 ("heart failure cardiac output ventricle") has both terms.
+    papers = svc.find_similar_papers("heart AND failure", count=10, structured=True)
+    assert [p.pmid for p in papers] == ["5"]
+
+    # NOT excludes: cancer docs without the word "therapy" (doc 2 has it, so excluded).
+    pmids = {p.pmid for p in svc.find_similar_papers("cancer NOT therapy", count=10, structured=True)}
+    assert pmids == {"1", "3"}
+
+    # Phrase query requires adjacency + positions on FIELD_TEXT.
+    papers = svc.find_similar_papers('"cancer immune"', count=10, structured=True)
+    assert [p.pmid for p in papers] == ["3"]
+
+    # Term text is normalized, so a capitalized query still matches lower-cased index tokens.
+    assert svc.find_similar_papers("CANCER", count=10, structured=True)
+
+
+def test_keyword_search_invalid_query_returns_empty():
+    svc = SearchService(_build_index(), min_doc_freq=1)
+    # A query that normalizes to nothing yields no results (no exception).
+    assert svc.find_similar_papers("!!! @@@", count=10, structured=True) == []
