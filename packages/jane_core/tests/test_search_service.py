@@ -145,6 +145,9 @@ def test_find_author_emails_requires_and_uses_disambiguation():
     svc = SearchService(_build_index(), min_doc_freq=1)
     emails = svc.find_author_emails("Smith, J", coauthors=["Doe, A"])
     assert [e.email for e in emails] == ["smith@onc.org"]
+    # Without co-authors the disambiguation requirement yields no results.
+    assert svc.find_author_emails("Smith, J") == []
+    assert svc.find_author_emails("Smith, J", coauthors=[]) == []
 
 
 def test_keyword_search_boolean_and_phrase():

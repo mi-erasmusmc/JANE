@@ -42,8 +42,13 @@ mv -T "${BASE}/current.new" "${BASE}/current"
 curl -fsS -H "x-api-key: ${ADMIN_KEY}" -X POST "http://127.0.0.1:${PORT}/admin/reload" >/dev/null
 echo "Promoted and reloaded ${VERSION}."
 
-# 5. Prune all but the last 2 generations.
-ls -1dt "${BASE}"/index-* 2>/dev/null | tail -n +3 | while read -r old; do
-  [[ "$(readlink -f "${BASE}/current")" == "$(readlink -f "${old}")" ]] && continue
+# 5. Prune all but the last 2 generations. Extracted dirs are version-named
+#    (e.g. ${BASE}/2026-10); exclude the staging dir and the `current` symlink, then keep
+#    the 2 newest real generations so the previous one remains for instant rollback.
+#    Never delete the live target.
+CURRENT_TARGET="$(readlink -f "${BASE}/current")"
+ls -1dt "${BASE}"/*/ 2>/dev/null | sed 's:/*$::' \
+  | grep -vx -e "${BASE}/staging" -e "${BASE}/current" | tail -n +3 | while read -r old; do
+  [[ "$(readlink -f "${old}")" == "${CURRENT_TARGET}" ]] && continue
   rm -rf "${old}"
 done

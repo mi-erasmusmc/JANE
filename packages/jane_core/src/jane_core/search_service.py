@@ -137,21 +137,24 @@ class SearchService:
         filters: Filters | None = None,
     ) -> list[EMail]:
         # requireDisambiguationForEMail: coauthors needed to disambiguate (NOTES section 1).
+        # Without at least one usable co-author clause no results are returned.
         if not author:
             return []
         searcher = self.index.searcher()
         author_q = self._text_match(FIELD_EMAIL_AUTHOR, author)
         if author_q is None:
             return []
-        clauses: list[tuple[Occur, Query]] = [(Occur.Must, author_q)]
-        if coauthors:
-            coauthor_subs = []
-            for coauthor in coauthors:
-                q = self._text_match(FIELD_AUTHORS, coauthor)
-                if q is not None:
-                    coauthor_subs.append((Occur.Should, q))
-            if coauthor_subs:
-                clauses.append((Occur.Must, Query.boolean_query(coauthor_subs)))
+        coauthor_subs: list[tuple[Occur, Query]] = []
+        for coauthor in coauthors or ():
+            q = self._text_match(FIELD_AUTHORS, coauthor)
+            if q is not None:
+                coauthor_subs.append((Occur.Should, q))
+        if not coauthor_subs:
+            return []
+        clauses: list[tuple[Occur, Query]] = [
+            (Occur.Must, author_q),
+            (Occur.Must, Query.boolean_query(coauthor_subs)),
+        ]
         query = Query.boolean_query(clauses)
         result = searcher.search(query, MAX_EMAIL_DOCS)
         emails: list[EMail] = []
